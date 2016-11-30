@@ -17,5 +17,5 @@ class Layers{
   public:
   
   private:
-  
+	  int x;
 }
