@@ -68,6 +68,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Adjustments.cpp" />
+    <ClCompile Include="ColorPicker.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_Shigako.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -80,6 +82,7 @@
     <ClCompile Include="GeneratedFiles\Release\moc_Shigako.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Layers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shigako.cpp" />
   </ItemGroup>
@@ -108,7 +111,10 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Adjustments.h" />
+    <ClInclude Include="ColorPicker.h" />
     <ClInclude Include="GeneratedFiles\ui_Shigako.h" />
+    <ClInclude Include="Layers.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Shigako.qrc">
