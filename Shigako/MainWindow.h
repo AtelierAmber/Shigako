@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QStringList>
 
+#include "Engine.h"
+
 QT_BEGIN_NAMESPACE
 class QAction;
 class QActionGroup;
@@ -21,43 +23,40 @@ public:
     MainWindow();
 
     private slots:
+    void about();
     void open();
     bool saveAs();
-    void brushColor();
+    /*void brushColor();
     void brushWidth();
     void changeBrush();
     void insertShape();
     void applyFilter();
-    void about();
-    void aboutPlugins();
+    
+    void aboutPlugins();*/
 
 private:
+
     void createActions();
     void createMenus();
-    void loadPlugins();
+    /*void loadPlugins();
     void populateMenus(QObject *plugin);
     void addToMenu(QObject *plugin, const QStringList &texts, QMenu *menu,
-        const char *member, QActionGroup *actionGroup = 0);
+        const char *member, QActionGroup *actionGroup = 0);*/
 
-    PaintArea *paintArea;
-    QScrollArea *scrollArea;
-    QDir pluginsDir;
-    QStringList pluginFileNames;
+    //PaintArea *paintArea;
+    //QScrollArea *scrollArea;
+    //QDir pluginsDir;
+    //QStringList pluginFileNames;
+
+    Engine* m_engine;
 
     QMenu *fileMenu;
-    QMenu *brushMenu;
-    QMenu *shapesMenu;
-    QMenu *filterMenu;
     QMenu *helpMenu;
-    QActionGroup *brushActionGroup;
     QAction *openAct;
     QAction *saveAsAct;
     QAction *exitAct;
-    QAction *brushWidthAct;
-    QAction *brushColorAct;
     QAction *aboutAct;
     QAction *aboutQtAct;
-    QAction *aboutPluginsAct;
 };
 
 #endif

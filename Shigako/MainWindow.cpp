@@ -18,28 +18,65 @@
 #include <QApplication>
 
 MainWindow::MainWindow() :
-paintArea(new PaintArea),
-scrollArea(new QScrollArea)
+m_engine(new Engine(this))
+//paintArea(new PaintArea),
+//scrollArea(new QScrollArea)
 {
-    scrollArea->setBackgroundRole(QPalette::Dark);
-    scrollArea->setWidget(paintArea);
-    setCentralWidget(scrollArea);
+    //scrollArea->setBackgroundRole(QPalette::Dark);
+    //scrollArea->setWidget(paintArea);
+    setCentralWidget(m_engine);
 
     createActions();
     createMenus();
-    loadPlugins();
+    //loadPlugins();
 
     setWindowTitle(tr("Plug & Paint"));
 
-    if (!brushActionGroup->actions().isEmpty())
-        brushActionGroup->actions().first()->trigger();
+    //if (!brushActionGroup->actions().isEmpty())
+      //  brushActionGroup->actions().first()->trigger();
 
     QTimer::singleShot(500, this, SLOT(aboutPlugins()));
 }
 
+void MainWindow::createActions()
+{
+    openAct = new QAction(tr("&Open..."), this);
+    openAct->setShortcuts(QKeySequence::Open);
+    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+    saveAsAct = new QAction(tr("&Save As..."), this);
+    saveAsAct->setShortcuts(QKeySequence::SaveAs);
+    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+
+    exitAct = new QAction(tr("E&xit"), this);
+    exitAct->setShortcuts(QKeySequence::Quit);
+    connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+
+    aboutAct = new QAction(tr("&About"), this);
+    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+
+    aboutQtAct = new QAction(tr("About &Qt"), this);
+    connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+}
+
+void MainWindow::createMenus()
+{
+    fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(openAct);
+    fileMenu->addAction(saveAsAct);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAct);
+
+    menuBar()->addSeparator();
+
+    helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->addAction(aboutAct);
+    helpMenu->addAction(aboutQtAct);
+}
+
 void MainWindow::open()
 {
-    const QString fileName = QFileDialog::getOpenFileName(this,
+    /*const QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open File"),
         QDir::currentPath());
     if (!fileName.isEmpty()) {
@@ -49,12 +86,12 @@ void MainWindow::open()
             return;
         }
         paintArea->adjustSize();
-    }
+    }*/
 }
 
 bool MainWindow::saveAs()
 {
-    const QString initialPath = QDir::currentPath() + "/untitled.png";
+    /*const QString initialPath = QDir::currentPath() + "/untitled.png";
 
     const QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
         initialPath);
@@ -63,10 +100,18 @@ bool MainWindow::saveAs()
     }
     else {
         return paintArea->saveImage(fileName, "png");
-    }
+    }*/
+    return true;
 }
 
-void MainWindow::brushColor()
+void MainWindow::about()
+{
+    QMessageBox::about(this, tr("About Plug & Paint"),
+        tr("The <b>Plug & Paint</b> example demonstrates how to write Qt "
+        "applications that can be extended through plugins."));
+}
+
+/*void MainWindow::brushColor()
 {
     const QColor newColor = QColorDialog::getColor(paintArea->brushColor());
     if (newColor.isValid())
@@ -120,13 +165,6 @@ void MainWindow::applyFilter()
 }
 //! [2]
 
-void MainWindow::about()
-{
-    QMessageBox::about(this, tr("About Plug & Paint"),
-        tr("The <b>Plug & Paint</b> example demonstrates how to write Qt "
-        "applications that can be extended through plugins."));
-}
-
 //! [3]
 void MainWindow::aboutPlugins()
 {
@@ -134,63 +172,6 @@ void MainWindow::aboutPlugins()
     dialog.exec();
 }
 //! [3]
-
-void MainWindow::createActions()
-{
-    openAct = new QAction(tr("&Open..."), this);
-    openAct->setShortcuts(QKeySequence::Open);
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-
-    saveAsAct = new QAction(tr("&Save As..."), this);
-    saveAsAct->setShortcuts(QKeySequence::SaveAs);
-    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-
-    exitAct = new QAction(tr("E&xit"), this);
-    exitAct->setShortcuts(QKeySequence::Quit);
-    connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
-
-    brushColorAct = new QAction(tr("&Brush Color..."), this);
-    connect(brushColorAct, SIGNAL(triggered()), this, SLOT(brushColor()));
-
-    brushWidthAct = new QAction(tr("&Brush Width..."), this);
-    connect(brushWidthAct, SIGNAL(triggered()), this, SLOT(brushWidth()));
-
-    brushActionGroup = new QActionGroup(this);
-
-    aboutAct = new QAction(tr("&About"), this);
-    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
-
-    aboutQtAct = new QAction(tr("About &Qt"), this);
-    connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-
-    aboutPluginsAct = new QAction(tr("About &Plugins"), this);
-    connect(aboutPluginsAct, SIGNAL(triggered()), this, SLOT(aboutPlugins()));
-}
-
-void MainWindow::createMenus()
-{
-    fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(openAct);
-    fileMenu->addAction(saveAsAct);
-    fileMenu->addSeparator();
-    fileMenu->addAction(exitAct);
-
-    brushMenu = menuBar()->addMenu(tr("&Brush"));
-    brushMenu->addAction(brushColorAct);
-    brushMenu->addAction(brushWidthAct);
-    brushMenu->addSeparator();
-
-    shapesMenu = menuBar()->addMenu(tr("&Shapes"));
-
-    filterMenu = menuBar()->addMenu(tr("&Filter"));
-
-    menuBar()->addSeparator();
-
-    helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(aboutAct);
-    helpMenu->addAction(aboutQtAct);
-    helpMenu->addAction(aboutPluginsAct);
-}
 
 //! [4]
 void MainWindow::loadPlugins()
@@ -267,3 +248,4 @@ void MainWindow::addToMenu(QObject *plugin, const QStringList &texts,
         }
     }
 }
+*/
