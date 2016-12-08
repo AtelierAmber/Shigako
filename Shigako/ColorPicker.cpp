@@ -1,10 +1,10 @@
-#pragma once
+#include "ColorPicker.h"
 
-#include "Engine.h"
+ColorPicker::ColorPicker(QObject *parent)
+    : QObject(parent){
 
-class ColorPicker{
-  public:
-  
-  private:
-  
+}
+
+ColorPicker::~ColorPicker(){
+
 }
