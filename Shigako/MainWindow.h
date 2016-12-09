@@ -1,19 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QDir>
+#include <QList>
 #include <QMainWindow>
-#include <QStringList>
 
-#include "Engine.h"
+class Engine;
 
 QT_BEGIN_NAMESPACE
-class QAction;
-class QActionGroup;
-class QMenu;
-class QScrollArea;
+class QLabel;
 QT_END_NAMESPACE
-class PaintArea;
 
 class MainWindow : public QMainWindow
 {
@@ -22,41 +17,38 @@ class MainWindow : public QMainWindow
 public:
     MainWindow();
 
+protected:
+    void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
+
     private slots:
-    void about();
     void open();
-    bool saveAs();
-    /*void brushColor();
-    void brushWidth();
-    void changeBrush();
-    void insertShape();
-    void applyFilter();
-    
-    void aboutPlugins();*/
+    void save();
+    void penColor();
+    void penWidth();
+    void about();
 
 private:
-
     void createActions();
     void createMenus();
-    /*void loadPlugins();
-    void populateMenus(QObject *plugin);
-    void addToMenu(QObject *plugin, const QStringList &texts, QMenu *menu,
-        const char *member, QActionGroup *actionGroup = 0);*/
-
-    //PaintArea *paintArea;
-    //QScrollArea *scrollArea;
-    //QDir pluginsDir;
-    //QStringList pluginFileNames;
+    bool maybeSave();
+    bool saveFile(const QByteArray &fileFormat);
 
     Engine* m_engine;
 
-    QMenu *fileMenu;
-    QMenu *helpMenu;
-    QAction *openAct;
-    QAction *saveAsAct;
-    QAction *exitAct;
-    QAction *aboutAct;
-    QAction *aboutQtAct;
+    QMenu* saveAsMenu;
+    QMenu* fileMenu;
+    QMenu* optionMenu;
+    QMenu* helpMenu;
+
+    QAction* openAct;
+    QList<QAction* > saveAsActs;
+    QAction* exitAct;
+    QAction* penColorAct;
+    QAction* penWidthAct;
+    QAction* printAct;
+    QAction* clearScreenAct;
+    QAction* aboutAct;
+    QAction* aboutQtAct;
 };
 
 #endif

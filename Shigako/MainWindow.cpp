@@ -1,56 +1,109 @@
-#include "interfaces.h"
+﻿#include <QtWidgets>
+#include <QLabel>
+#include <QTextBrowser>
+
 #include "MainWindow.h"
-#include "PaintArea.h"
-#include "PluginDialog.h"
+#include "ScribbleArea.h"
+#include "Engine.h"
 
-#include <QPluginLoader>
-#include <QTimer>
+MainWindow::MainWindow(){
+    m_engine = new Engine;
 
-#include <QScrollArea>
-#include <QMessageBox>
-#include <QActionGroup>
-#include <QAction>
-#include <QMenu>
-#include <QMenuBar>
-#include <QFileDialog>
-#include <QColorDialog>
-#include <QInputDialog>
-#include <QApplication>
-
-MainWindow::MainWindow() :
-m_engine(new Engine(this))
-//paintArea(new PaintArea),
-//scrollArea(new QScrollArea)
-{
-    //scrollArea->setBackgroundRole(QPalette::Dark);
-    //scrollArea->setWidget(paintArea);
     setCentralWidget(m_engine);
 
     createActions();
     createMenus();
-    //loadPlugins();
 
-    setWindowTitle(tr("Plug & Paint"));
-
-    //if (!brushActionGroup->actions().isEmpty())
-      //  brushActionGroup->actions().first()->trigger();
-
-    QTimer::singleShot(500, this, SLOT(aboutPlugins()));
+    setWindowTitle(QString::fromStdWString(L"Shigako \u30B7\u30AB\u30B3"));
+    resize(500, 500);
 }
 
-void MainWindow::createActions()
-{
+void MainWindow::closeEvent(QCloseEvent *event){
+    if (maybeSave()) {
+        event->accept();
+    }
+    else {
+        event->ignore();
+    }
+}
+
+void MainWindow::open(){
+    if (maybeSave()) {
+        QString fileName = QFileDialog::getOpenFileName(this,
+            tr("Open File"), QDir::currentPath());
+        if (!fileName.isEmpty())
+            m_engine->openImage(fileName);
+    }
+}
+
+void MainWindow::save(){
+    QAction *action = qobject_cast<QAction *>(sender());
+    QByteArray fileFormat = action->data().toByteArray();
+    saveFile(fileFormat);
+}
+
+void MainWindow::penColor(){
+    //QColor newColor = QColorDialog::getColor(scribbleArea->penColor());
+    //if (newColor.isValid())
+      //  scribbleArea->setPenColor(newColor);
+}
+
+void MainWindow::penWidth(){
+//     bool ok;
+//     int newWidth = QInputDialog::getInt(this, tr("Scribble"),
+//         tr("Select pen width:"),
+//         scribbleArea->penWidth(),
+//         1, 50, 1, &ok);
+//     if (ok)
+//         scribbleArea->setPenWidth(newWidth);
+}
+
+void MainWindow::about(){
+    QMessageBox::about(this, tr("About Scribble"),
+        tr("<p>The <b>Scribble</b> example shows how to use QMainWindow as the "
+        "base widget for an application, and how to reimplement some of "
+        "QWidget's event handlers to receive the events generated for "
+        "the application's widgets:</p><p> We reimplement the mouse event "
+        "handlers to facilitate drawing, the paint event handler to "
+        "update the application and the resize event handler to optimize "
+        "the application's appearance. In addition we reimplement the "
+        "close event handler to intercept the close events before "
+        "terminating the application.</p><p> The example also demonstrates "
+        "how to use QPainter to draw an image in real time, as well as "
+        "to repaint widgets.</p>"));
+}
+
+void MainWindow::createActions(){
     openAct = new QAction(tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-    saveAsAct = new QAction(tr("&Save As..."), this);
-    saveAsAct->setShortcuts(QKeySequence::SaveAs);
-    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+    foreach(QByteArray format, QImageWriter::supportedImageFormats()) {
+        QString text = tr("%1...").arg(QString(format).toUpper());
+
+        QAction *action = new QAction(text, this);
+        action->setData(format);
+        connect(action, SIGNAL(triggered()), this, SLOT(save()));
+        saveAsActs.append(action);
+    }
+
+    printAct = new QAction(tr("&Print..."), this);
+    //connect(printAct, SIGNAL(triggered()), scribbleArea, SLOT(print()));
 
     exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+
+    penColorAct = new QAction(tr("&Pen Color..."), this);
+    connect(penColorAct, SIGNAL(triggered()), this, SLOT(penColor()));
+
+    penWidthAct = new QAction(tr("Pen &Width..."), this);
+    connect(penWidthAct, SIGNAL(triggered()), this, SLOT(penWidth()));
+
+    clearScreenAct = new QAction(tr("&Clear Screen"), this);
+    clearScreenAct->setShortcut(tr("Ctrl+L"));
+   // connect(clearScreenAct, SIGNAL(triggered()),
+     //   scribbleArea, SLOT(clearImage()));
 
     aboutAct = new QAction(tr("&About"), this);
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
@@ -59,193 +112,64 @@ void MainWindow::createActions()
     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 }
 
-void MainWindow::createMenus()
-{
-    fileMenu = menuBar()->addMenu(tr("&File"));
+void MainWindow::createMenus(){
+    saveAsMenu = new QMenu(tr("&Save As"), this);
+    foreach(QAction *action, saveAsActs)
+        saveAsMenu->addAction(action);
+
+    fileMenu = new QMenu(tr("&File"), this);
     fileMenu->addAction(openAct);
-    fileMenu->addAction(saveAsAct);
+    fileMenu->addMenu(saveAsMenu);
+    fileMenu->addAction(printAct);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
 
-    menuBar()->addSeparator();
+    optionMenu = new QMenu(tr("&Options"), this);
+    optionMenu->addAction(penColorAct);
+    optionMenu->addAction(penWidthAct);
+    optionMenu->addSeparator();
+    optionMenu->addAction(clearScreenAct);
 
-    helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu = new QMenu(tr("&Help"), this);
     helpMenu->addAction(aboutAct);
     helpMenu->addAction(aboutQtAct);
+
+    menuBar()->addMenu(fileMenu);
+    menuBar()->addMenu(optionMenu);
+    menuBar()->addMenu(helpMenu);
 }
 
-void MainWindow::open()
-{
-    /*const QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open File"),
-        QDir::currentPath());
-    if (!fileName.isEmpty()) {
-        if (!paintArea->openImage(fileName)) {
-            QMessageBox::information(this, tr("Plug & Paint"),
-                tr("Cannot load %1.").arg(fileName));
-            return;
+bool MainWindow::maybeSave(){
+    if (m_engine->isModified()) {
+        QMessageBox::StandardButton ret;
+        ret = QMessageBox::warning(this, tr("Shigako"),
+            tr("The image has been modified.\n"
+            "Do you want to save your changes?"),
+            QMessageBox::Save | QMessageBox::Discard
+            | QMessageBox::Cancel);
+        if (ret == QMessageBox::Save) {
+            return saveFile("png");
         }
-        paintArea->adjustSize();
-    }*/
+        else if (ret == QMessageBox::Cancel) {
+            return false;
+        }
+    }
+    return true;
 }
 
-bool MainWindow::saveAs()
-{
-    /*const QString initialPath = QDir::currentPath() + "/untitled.png";
+bool MainWindow::saveFile(const QByteArray &fileFormat){
+    QString initialPath = QDir::currentPath() + "/untitled." + fileFormat;
 
-    const QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
-        initialPath);
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+        initialPath,
+        tr("%1 Files (*.%2);;All Files (*)")
+        .arg(QString::fromLatin1(fileFormat.toUpper()))
+        .arg(QString::fromLatin1(fileFormat)));
     if (fileName.isEmpty()) {
         return false;
     }
     else {
-        return paintArea->saveImage(fileName, "png");
-    }*/
-    return true;
-}
-
-void MainWindow::about()
-{
-    QMessageBox::about(this, tr("About Plug & Paint"),
-        tr("The <b>Plug & Paint</b> example demonstrates how to write Qt "
-        "applications that can be extended through plugins."));
-}
-
-/*void MainWindow::brushColor()
-{
-    const QColor newColor = QColorDialog::getColor(paintArea->brushColor());
-    if (newColor.isValid())
-        paintArea->setBrushColor(newColor);
-}
-
-void MainWindow::brushWidth()
-{
-    bool ok;
-    const int newWidth = QInputDialog::getInt(this, tr("Plug & Paint"),
-        tr("Select brush width:"),
-        paintArea->brushWidth(),
-        1, 50, 1, &ok);
-    if (ok)
-        paintArea->setBrushWidth(newWidth);
-}
-
-//! [0]
-void MainWindow::changeBrush()
-{
-    QAction *action = qobject_cast<QAction *>(sender());
-    BrushInterface *iBrush = qobject_cast<BrushInterface *>(action->parent());
-    const QString brush = action->text();
-
-    paintArea->setBrush(iBrush, brush);
-}
-//! [0]
-
-//! [1]
-void MainWindow::insertShape()
-{
-    QAction *action = qobject_cast<QAction *>(sender());
-    ShapeInterface *iShape = qobject_cast<ShapeInterface *>(action->parent());
-
-    const QPainterPath path = iShape->generateShape(action->text(), this);
-    if (!path.isEmpty())
-        paintArea->insertShape(path);
-}
-//! [1]
-
-//! [2]
-void MainWindow::applyFilter()
-{
-    QAction *action = qobject_cast<QAction *>(sender());
-    FilterInterface *iFilter =
-        qobject_cast<FilterInterface *>(action->parent());
-
-    const QImage image = iFilter->filterImage(action->text(), paintArea->image(),
-        this);
-    paintArea->setImage(image);
-}
-//! [2]
-
-//! [3]
-void MainWindow::aboutPlugins()
-{
-    PluginDialog dialog(pluginsDir.path(), pluginFileNames, this);
-    dialog.exec();
-}
-//! [3]
-
-//! [4]
-void MainWindow::loadPlugins()
-{
-    foreach(QObject *plugin, QPluginLoader::staticInstances())
-        populateMenus(plugin);
-    //! [4] //! [5]
-
-    pluginsDir = QDir(qApp->applicationDirPath());
-
-#if defined(Q_OS_WIN)
-    if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-        pluginsDir.cdUp();
-#elif defined(Q_OS_MAC)
-    if (pluginsDir.dirName() == "MacOS") {
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-    }
-#endif
-    pluginsDir.cd("plugins");
-    //! [5]
-
-    //! [6]
-    foreach(QString fileName, pluginsDir.entryList(QDir::Files)) {
-        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
-        QObject *plugin = loader.instance();
-        if (plugin) {
-            populateMenus(plugin);
-            pluginFileNames += fileName;
-            //! [6] //! [7]
-        }
-        //! [7] //! [8]
-    }
-    //! [8]
-
-    //! [9]
-    brushMenu->setEnabled(!brushActionGroup->actions().isEmpty());
-    shapesMenu->setEnabled(!shapesMenu->actions().isEmpty());
-    filterMenu->setEnabled(!filterMenu->actions().isEmpty());
-}
-//! [9]
-
-//! [10]
-void MainWindow::populateMenus(QObject *plugin)
-{
-    BrushInterface *iBrush = qobject_cast<BrushInterface *>(plugin);
-    if (iBrush)
-        addToMenu(plugin, iBrush->brushes(), brushMenu, SLOT(changeBrush()),
-        brushActionGroup);
-
-    ShapeInterface *iShape = qobject_cast<ShapeInterface *>(plugin);
-    if (iShape)
-        addToMenu(plugin, iShape->shapes(), shapesMenu, SLOT(insertShape()));
-
-    FilterInterface *iFilter = qobject_cast<FilterInterface *>(plugin);
-    if (iFilter)
-        addToMenu(plugin, iFilter->filters(), filterMenu, SLOT(applyFilter()));
-}
-//! [10]
-
-void MainWindow::addToMenu(QObject *plugin, const QStringList &texts,
-    QMenu *menu, const char *member,
-    QActionGroup *actionGroup)
-{
-    foreach(QString text, texts) {
-        QAction *action = new QAction(text, plugin);
-        connect(action, SIGNAL(triggered()), this, member);
-        menu->addAction(action);
-
-        if (actionGroup) {
-            action->setCheckable(true);
-            actionGroup->addAction(action);
-        }
+        //return scribbleArea->saveImage(fileName, fileFormat.constData());
+        return true;
     }
 }
-*/
