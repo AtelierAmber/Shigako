@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QPainter>
 #include <QLayout>
+#include <QScrollArea>
 
 #include <map>
 
@@ -28,6 +29,7 @@ private:
     void setupWidgets();
     
     DrawArea* m_drawArea;
+    QScrollArea* m_imageArea;
 };
 
 enum DrawTool{
@@ -59,15 +61,15 @@ class DrawArea :
     Q_OBJECT
 
 public:
-    DrawArea(){/* Empty */ }
+    DrawArea(QWidget* parent = 0);
     ~DrawArea();
 
     bool openImage(const QString &fileName);
+    void setImage(const QImage &image);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);
     void setPenWidth(int newWidth);
 
-    void init();
     bool isModified() const { return m_modified; }
     QColor paintColor() const { return m_paintColor; }
     DrawBrush* brush() const { return m_currentBrush; }

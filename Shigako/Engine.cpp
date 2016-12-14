@@ -13,10 +13,11 @@
 Engine::Engine(QWidget* parent)
     : QWidget(parent),
     m_drawArea(new DrawArea){
-    m_drawArea->init();
+    m_imageArea = new QScrollArea;
+    m_imageArea->setWidget(m_drawArea);
 
     EngineLayout *layout = new EngineLayout;
-    layout->addWidget(m_drawArea, EngineLayout::Center);
+    layout->addWidget(m_imageArea, EngineLayout::Center);
 //     layout->addWidget(createLabel("North"), EngineLayout::North);
 //     layout->addWidget(createLabel("West"), EngineLayout::West);
 //     layout->addWidget(createLabel("East 1"), EngineLayout::East);
@@ -42,26 +43,34 @@ bool Engine::isModified(){
     return m_drawArea->isModified();
 }
 
+
+
 /************************************************************************/
 /* Draw Area                                                            */
 /************************************************************************/
 
-DrawArea::~DrawArea(){
-
-}
-
-void DrawArea::init(){
-    m_image = QImage(500, 500, QImage::Format_RGB32);
+DrawArea::DrawArea(QWidget* parent) :
+    QWidget(parent),
+    m_image(500, 400, QImage::Format_RGB32),
+    m_lastPoint(-1, -1){
+    /* Empty */
     m_image.fill(qRgb(255, 255, 255));
     m_modified = false;
     m_paintColor = qRgb(0, 0, 0);
     m_brushes[0] = QBrush(Qt::SolidPattern);
 }
 
+DrawArea::~DrawArea(){
+
+}
+
 bool DrawArea::openImage(const QString &fileName){
-    QImage loadedImage;
-    if (!loadedImage.load(fileName))
+    QImage image;
+    if (!image.load(fileName))
         return false;
+
+    setImage(image);
+    return true;
 
     QSize newSize = loadedImage.size().expandedTo(size());
     resizeImage(&loadedImage, newSize);
@@ -69,6 +78,10 @@ bool DrawArea::openImage(const QString &fileName){
     m_modified = false;
     update();
     return true;
+}
+
+void DrawArea::setImage(const QImage &image){
+
 }
 
 bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
