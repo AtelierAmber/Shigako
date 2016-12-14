@@ -30,6 +30,14 @@ Engine::~Engine(){
 }
 
 
+void Engine::openImage(const QString& filename){
+    m_drawArea->openImage(filename);
+}
+
+bool Engine::saveImage(const QString& fileName, const char* fileFormat){
+    return m_drawArea->saveImage(fileName, fileFormat);
+}
+
 bool Engine::isModified(){
     return m_drawArea->isModified();
 }
@@ -37,9 +45,6 @@ bool Engine::isModified(){
 /************************************************************************/
 /* Draw Area                                                            */
 /************************************************************************/
-DrawArea::DrawArea(QColor paintColor, QImage image, int brushID):
-    m_paintColor(paintColor), m_image(image), 
-    m_currentBrush(&(m_brushes[brushID])), m_painter(&image){ /* Empty */}
 
 DrawArea::~DrawArea(){
 
@@ -174,4 +179,16 @@ void DrawArea::resizeImage(QImage *image, const QSize &newSize){
     QPainter painter(&newImage);
     painter.drawImage(QPoint(0, 0), *image);
     *image = newImage;
+}
+
+/************************************************************************/
+/* IColorPicker                                                        */
+/************************************************************************/
+
+IColorPicker::IColorPicker(){
+
+}
+
+IColorPicker::~IColorPicker(){
+
 }

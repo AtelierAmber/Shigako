@@ -19,12 +19,10 @@ public:
     Engine(QWidget* parent = 0);
     ~Engine();
 
-    void openImage(QString){}
+    void openImage(const QString& filename);
+    bool saveImage(const QString& fileName, const char* fileFormat);
 
     bool isModified();
-
-    private slots:
-
 
 private:
     void setupWidgets();
@@ -61,7 +59,6 @@ class DrawArea :
     Q_OBJECT
 
 public:
-    DrawArea(QColor paintColor, QImage image, int brushID);
     DrawArea(){/* Empty */ }
     ~DrawArea();
 
@@ -103,4 +100,13 @@ private:
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
     QPoint m_lastPoint;
+};
+
+class IColorPicker :
+    public QWidget{
+public:
+    IColorPicker();
+    ~IColorPicker();
+
+private:
 };

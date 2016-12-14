@@ -169,7 +169,7 @@ bool MainWindow::saveFile(const QByteArray &fileFormat){
         return false;
     }
     else {
-        //return scribbleArea->saveImage(fileName, fileFormat.constData());
+        return m_engine->saveImage(fileName, fileFormat.constData());
         return true;
     }
 }
