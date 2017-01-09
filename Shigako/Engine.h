@@ -1,5 +1,4 @@
 #pragma once
-
 #include <QColor>
 #include <QImage>
 #include <QPoint>
@@ -7,10 +6,18 @@
 #include <QPainter>
 #include <QLayout>
 #include <QScrollArea>
+#include <QLabel>
+#include <QPushButton>
 
+#include <functional>
 #include <map>
+#include <cstdio>
 
 class DrawArea;
+class Adjustments;
+class Layers;
+class ColorPicker;
+class Tools;
 
 class Engine : 
     public QWidget{
@@ -29,6 +36,10 @@ private:
     void setupWidgets();
     
     DrawArea* m_drawArea;
+    Adjustments* m_adjustments;
+    Layers* m_layers;
+    ColorPicker* m_colorPicker;
+    Tools* m_tools;
     QScrollArea* m_imageArea;
 };
 
@@ -104,11 +115,58 @@ private:
     QPoint m_lastPoint;
 };
 
-class IColorPicker :
-    public QWidget{
-public:
-    IColorPicker();
-    ~IColorPicker();
+struct vec2{
+    vec2(int X, int Y) : x(X), y(Y){}
+    int x, y;
+};
 
+typedef unsigned int LocationID;
+namespace Location{
+    enum{
+        TOP = 0x1,
+        BOTTOM = 0x2,
+        LEFT = 0x4,
+        RIGHT = 0x8,
+        MIDDLE = 0x10,
+    };
+};
+
+class ShigakoButton :
+    public QPushButton{
+    Q_OBJECT
+public:
+    void init(QString filePath, std::function<void()> CallFunction, vec2 size, LocationID location){}
+
+    bool setIcon(QString fileName){}
+    void setLocation(LocationID location){}
+    void setCall(std::function<void()> callFunc){}
+    void setSize(int w, int h){}
 private:
+    std::function<void()> callFunc = nullptr;
+};
+
+class ShigakoLabel :
+    public QLabel{
+    Q_OBJECT
+public:
+    void init(QString label, LocationID location){}
+};
+
+class ShigakoImage :
+    public QLabel{
+    Q_OBJECT
+public:
+    void init(QString filePath, LocationID location){}
+};
+
+class ShigakoWidget :
+    public QWidget{
+    Q_OBJECT
+public:
+    ShigakoWidget(QWidget *parent = 0);
+    ~ShigakoWidget();
+protected:
+    ShigakoButton addButton(std::function<void()> CallFunction, vec2 size, LocationID location, QString filePath = "NULL");
+    ShigakoLabel addLabel(QString label, LocationID location);
+    ShigakoImage addImage(QString filePath, LocationID location);
 };

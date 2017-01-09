@@ -1,5 +1,9 @@
 #include "Engine.h"
 #include "EngineLayout.h"
+#include "Layers.h"
+#include "ColorPicker.h"
+#include "Adjustments.h"
+#include "Tools.h"
 
 #include <QtWidgets>
 #ifndef QT_NO_PRINTER
@@ -16,8 +20,17 @@ Engine::Engine(QWidget* parent)
     m_imageArea = new QScrollArea;
     m_imageArea->setWidget(m_drawArea);
 
+    m_adjustments = new Adjustments(this);
+    m_colorPicker = new ColorPicker(this);
+    m_layers = new Layers(this);
+    m_tools = new Tools(this);
+
     EngineLayout *layout = new EngineLayout;
     layout->addWidget(m_imageArea, EngineLayout::Center);
+    layout->addWidget(m_adjustments, EngineLayout::East);
+    layout->addWidget(m_colorPicker, EngineLayout::East);
+    layout->addWidget(m_layers, EngineLayout::East);
+    layout->addWidget(m_tools, EngineLayout::West);
 //     layout->addWidget(createLabel("North"), EngineLayout::North);
 //     layout->addWidget(createLabel("West"), EngineLayout::West);
 //     layout->addWidget(createLabel("East 1"), EngineLayout::East);
@@ -71,17 +84,12 @@ bool DrawArea::openImage(const QString &fileName){
 
     setImage(image);
     return true;
-
-    QSize newSize = loadedImage.size().expandedTo(size());
-    resizeImage(&loadedImage, newSize);
-    m_image = loadedImage;
-    m_modified = false;
-    update();
-    return true;
 }
 
 void DrawArea::setImage(const QImage &image){
-
+    m_modified = true;
+    m_image = image;
+    update();
 }
 
 bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
@@ -136,7 +144,7 @@ void DrawArea::mousePressEvent(QMouseEvent *event){
         drawLineTo(event->pos());
     }
 
-    //Middle moust button
+    //Middle mouse button
     if (event->button() == Qt::MiddleButton){
 
     }
@@ -195,13 +203,26 @@ void DrawArea::resizeImage(QImage *image, const QSize &newSize){
 }
 
 /************************************************************************/
-/* IColorPicker                                                        */
+/* Shigako Widget                                                                     */
 /************************************************************************/
-
-IColorPicker::IColorPicker(){
+ShigakoWidget::ShigakoWidget(QWidget *parent)
+    : QWidget(parent){
 
 }
 
-IColorPicker::~IColorPicker(){
+ShigakoWidget::~ShigakoWidget(){
 
+}
+
+ShigakoButton ShigakoWidget::addButton(std::function<void()> CallFunction, vec2 size, LocationID location, QString filePath){
+    std::printf("Added Button at 0x%04x, with image %s, and a size of %i,%i. Use this function's return to modify the button.\n", location, filePath.toStdString().c_str(), size.x, size.y);
+     return ShigakoButton();
+}
+ShigakoLabel ShigakoWidget::addLabel(QString label, LocationID location){
+    std::printf("Added Label at 0x%04x, with label %s. Use this function's return to modify the label.\n", location, label.toStdString().c_str());
+    return ShigakoLabel();
+}
+ShigakoImage ShigakoWidget::addImage(QString filePath, LocationID location){
+    std::printf("Added Image at 0x%04x, with image %s. Use this function's return to modify the image.\n", location, filePath.toStdString().c_str());
+    return ShigakoImage();
 }

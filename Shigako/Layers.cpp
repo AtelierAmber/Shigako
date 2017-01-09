@@ -1,7 +1,7 @@
 #include "Layers.h"
 
-Layers::Layers(QObject *parent)
-    : QObject(parent){
+Layers::Layers(QWidget *parent)
+    : ShigakoWidget(parent){
 
 }
 

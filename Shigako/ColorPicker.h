@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QObject>
-//#include "Engine/Engine.h"
+#include <QWidget>
+#include "Engine.h"
 
 //Available functions
 /*this->addButton(ButtonPic.png, Location, Text, vec2 size)
@@ -15,10 +15,10 @@
 */
 
 
-class ColorPicker : public QObject{
+class ColorPicker : public ShigakoWidget{
     Q_OBJECT
 
 public:
-    ColorPicker(QObject *parent);
+    ColorPicker(QWidget *parent);
     ~ColorPicker();
 };

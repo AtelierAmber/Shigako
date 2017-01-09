@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QObject>
+#include <QWidget>
 
-//#include "Engine/Engine.h"
+#include "Engine.h"
 
 //Available functions
 /*this->addButton(ButtonPic.png, Location, Text, vec2 size)
@@ -15,11 +15,10 @@
 *vec2 is defined as vec2(x, y); It's just a x and y position
 */
 
-class Layers : public QObject
-{
+class Layers : public ShigakoWidget{
     Q_OBJECT
 
 public:
-    Layers(QObject *parent);
+    Layers(QWidget *parent);
     ~Layers();
 };

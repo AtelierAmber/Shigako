@@ -61,7 +61,7 @@ void ColorPicker::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
 }
 
 const QMetaObject ColorPicker::staticMetaObject = {
-    { &QObject::staticMetaObject, qt_meta_stringdata_ColorPicker.data,
+    { &ShigakoWidget::staticMetaObject, qt_meta_stringdata_ColorPicker.data,
       qt_meta_data_ColorPicker,  qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
 };
 
@@ -76,12 +76,12 @@ void *ColorPicker::qt_metacast(const char *_clname)
     if (!_clname) return Q_NULLPTR;
     if (!strcmp(_clname, qt_meta_stringdata_ColorPicker.stringdata0))
         return static_cast<void*>(const_cast< ColorPicker*>(this));
-    return QObject::qt_metacast(_clname);
+    return ShigakoWidget::qt_metacast(_clname);
 }
 
 int ColorPicker::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
-    _id = QObject::qt_metacall(_c, _id, _a);
+    _id = ShigakoWidget::qt_metacall(_c, _id, _a);
     if (_id < 0)
         return _id;
     return _id;
