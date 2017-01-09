@@ -145,19 +145,15 @@
     <CustomBuild Include="Tools.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="interfaces.h">
+    <CustomBuild Include="DarkTheme.stylesheet" />
+    <CustomBuild Include="interfaces.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </CustomBuild>
+    <CustomBuild Include="GeneratedFiles\ui_MainWindow.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="QtGuiApplication1.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="DarkTheme.stylesheet" />
   </ItemGroup>
 </Project>

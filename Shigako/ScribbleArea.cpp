@@ -1,8 +1,4 @@
 #include <QtWidgets>
-#ifndef QT_NO_PRINTER
-#include <QPrinter>
-#include <QPrintDialog>
-#endif
 
 #include "scribblearea.h"
 
@@ -126,21 +122,21 @@ void ScribbleArea::resizeImage(QImage *image, const QSize &newSize)
     painter.drawImage(QPoint(0, 0), *image);
     *image = newImage;
 }
-
-void ScribbleArea::print()
-{
-#if !defined(QT_NO_PRINTER) && !defined(QT_NO_PRINTDIALOG)
-    QPrinter printer(QPrinter::HighResolution);
-
-    QPrintDialog printDialog(&printer, this);
-    if (printDialog.exec() == QDialog::Accepted) {
-        QPainter painter(&printer);
-        QRect rect = painter.viewport();
-        QSize size = image.size();
-        size.scale(rect.size(), Qt::KeepAspectRatio);
-        painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
-        painter.setWindow(image.rect());
-        painter.drawImage(0, 0, image);
-    }
-#endif // QT_NO_PRINTER
-}
+// 
+// void ScribbleArea::print()
+// {
+// #if !defined(QT_NO_PRINTER) && !defined(QT_NO_PRINTDIALOG)
+//     QPrinter printer(QPrinter::HighResolution);
+// 
+//     QPrintDialog printDialog(&printer, this);
+//     if (printDialog.exec() == QDialog::Accepted) {
+//         QPainter painter(&printer);
+//         QRect rect = painter.viewport();
+//         QSize size = image.size();
+//         size.scale(rect.size(), Qt::KeepAspectRatio);
+//         painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
+//         painter.setWindow(image.rect());
+//         painter.drawImage(0, 0, image);
+//     }
+// #endif // QT_NO_PRINTER
+// }

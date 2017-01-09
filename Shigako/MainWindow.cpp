@@ -87,9 +87,6 @@ void MainWindow::createActions(){
         saveAsActs.append(action);
     }
 
-    printAct = new QAction(tr("&Print..."), this);
-    //connect(printAct, SIGNAL(triggered()), scribbleArea, SLOT(print()));
-
     exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -120,7 +117,6 @@ void MainWindow::createMenus(){
     fileMenu = new QMenu(tr("&File"), this);
     fileMenu->addAction(openAct);
     fileMenu->addMenu(saveAsMenu);
-    fileMenu->addAction(printAct);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
 

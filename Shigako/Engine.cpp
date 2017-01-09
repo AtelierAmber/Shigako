@@ -6,10 +6,6 @@
 #include "Tools.h"
 
 #include <QtWidgets>
-#ifndef QT_NO_PRINTER
-#include <QPrinter>
-#include <QPrintDialog>
-#endif
 
 /************************************************************************/
 /* Core Engine                                                         */
@@ -117,23 +113,6 @@ void DrawArea::clearImage(){
     m_image.fill(qRgb(255, 255, 255));
     m_modified = true;
     update();
-}
-
-void DrawArea::print(){
-#if !defined(QT_NO_PRINTER) && !defined(QT_NO_PRINTDIALOG)
-    QPrinter printer(QPrinter::HighResolution);
-
-    QPrintDialog printDialog(&printer, this);
-    if (printDialog.exec() == QDialog::Accepted) {
-        QPainter painter(&printer);
-        QRect rect = painter.viewport();
-        QSize size = m_image.size();
-        size.scale(rect.size(), Qt::KeepAspectRatio);
-        painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
-        painter.setWindow(m_image.rect());
-        painter.drawImage(0, 0, m_image);
-    }
-#endif // QT_NO_PRINTER
 }
 
 void DrawArea::mousePressEvent(QMouseEvent *event){

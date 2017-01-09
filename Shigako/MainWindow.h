@@ -45,7 +45,6 @@ private:
     QAction* exitAct;
     QAction* penColorAct;
     QAction* penWidthAct;
-    QAction* printAct;
     QAction* clearScreenAct;
     QAction* aboutAct;
     QAction* aboutQtAct;
