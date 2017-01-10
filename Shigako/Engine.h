@@ -10,7 +10,7 @@
 #include <QPushButton>
 
 #include <functional>
-#include <map>
+#include <vector>
 #include <cstdio>
 
 class DrawArea;
@@ -29,8 +29,11 @@ public:
 
     void openImage(const QString& filename);
     bool saveImage(const QString& fileName, const char* fileFormat);
+    void clearImage();
 
     bool isModified();
+    QColor penColor();
+    void setPenColor(const QColor& color);
 
 private:
     void setupWidgets();
@@ -52,19 +55,33 @@ enum DrawTool{
 };
 
 struct DrawBrush{
-    operator QPen() const { return QPen(brush, 0, style, capStyle, joinStyle); }
-    operator QBrush() const { return brush; }
-    DrawBrush(){}
-    DrawBrush(QBrush b) : brush(b), style(Qt::SolidLine), capStyle(Qt::RoundCap), joinStyle(Qt::MPenJoinStyle) 
-    {/* Empty */ }
+    DrawBrush(QBrush b, int width = 10) : m_brush(b){
+        m_pen = QPen(m_brush, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    }
+    DrawBrush(QPen p) : m_pen(p) {}
+    DrawBrush(int width = 10, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::RoundCap, Qt::PenJoinStyle join = Qt::RoundJoin) {
+        m_pen = QPen();
+        m_pen.setStyle(style);
+        m_pen.setCapStyle(cap);
+        m_pen.setJoinStyle(join);
+        m_pen.setColor(qRgba(255, 255, 255, 255));
+        m_pen.setWidth(width);
+        m_pen.setBrush(Qt::SolidPattern);
+    }
 
-    void setColor(const QColor& color){ brush.setColor(color); }
+    void    setBrush(const QBrush& brush){ m_brush = brush; m_pen.setBrush(brush); }
+    void    setColor(const QColor& color){ m_pen.setColor(color); }
+    const   QColor& getColor() const { return m_pen.color(); }
+    void    setStyle(const Qt::PenStyle& style){ m_pen.setStyle(style); }
+    void    setCap(const Qt::PenCapStyle cap){ m_pen.setCapStyle(cap); }
+    void    setJoin(const Qt::PenJoinStyle& join){ m_pen.setJoinStyle(join); }
+    void    setWidth(int width){ m_pen.setWidth(width); }
+    int     getWidth(){ return m_pen.width(); }
+    QPen    Pen(){ return m_pen; }
 
 protected:
-    QBrush brush;
-    Qt::PenStyle style;
-    Qt::PenCapStyle capStyle;
-    Qt::PenJoinStyle joinStyle;
+    QBrush m_brush;
+    QPen m_pen;
 };
 
 class DrawArea :
@@ -75,40 +92,37 @@ public:
     DrawArea(QWidget* parent = 0);
     ~DrawArea();
 
-    bool openImage(const QString &fileName);
-    void setImage(const QImage &image);
-    bool saveImage(const QString &fileName, const char *fileFormat);
-    void setPenColor(const QColor &newColor);
-    void setPenWidth(int newWidth);
+    bool        openImage(const QString &fileName);
+    bool        saveImage(const QString &fileName, const char *fileFormat);
+    void        setPenColor(const QColor &newColor);
+    void        setPenWidth(int newWidth);
 
-    bool isModified() const { return m_modified; }
-    QColor paintColor() const { return m_paintColor; }
-    DrawBrush* brush() const { return m_currentBrush; }
-    int paintWidth() const { return m_paintWidth; }
+    bool        isModified() const { return m_modified; }
+    QColor      penColor() const { return m_currentBrush->getColor(); }
+    DrawBrush*  brush() const { return m_currentBrush; }
+    int         paintWidth() const { return m_paintWidth; }
 
     public slots:
-    void clearImage();
+    void        clearImage();
 
 protected:
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    void        mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void        mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void        mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void        paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
+    void        resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 private:
-    void drawLineTo(const QPoint &endPoint);
-    void resizeImage(QImage *image, const QSize &newSize);
+    void        drawLineTo(const QPoint &endPoint);
+    void        resizeImage(QImage *image, const QSize &newSize);
 
     //Brush ID, Brush
-    std::map<int, DrawBrush> m_brushes;
+    std::vector<DrawBrush> m_brushes;
 
     bool m_modified;
     bool m_scribbling;
     int m_paintWidth;
-    QColor m_paintColor;
     QImage m_image;
     QPoint lastPoint;
-    QPainter m_painter;
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
     QPoint m_lastPoint;

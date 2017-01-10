@@ -43,9 +43,9 @@ void MainWindow::save(){
 }
 
 void MainWindow::penColor(){
-    //QColor newColor = QColorDialog::getColor(scribbleArea->penColor());
-    //if (newColor.isValid())
-      //  scribbleArea->setPenColor(newColor);
+    QColor newColor = QColorDialog::getColor(m_engine->penColor(), this, QString("Pen Color"), QColorDialog::ColorDialogOption::ShowAlphaChannel);
+    if (newColor.isValid())
+        m_engine->setPenColor(newColor);
 }
 
 void MainWindow::penWidth(){
@@ -99,8 +99,8 @@ void MainWindow::createActions(){
 
     clearScreenAct = new QAction(tr("&Clear Screen"), this);
     clearScreenAct->setShortcut(tr("Ctrl+L"));
-   // connect(clearScreenAct, SIGNAL(triggered()),
-     //   scribbleArea, SLOT(clearImage()));
+    connect(clearScreenAct, SIGNAL(triggered()),
+        this, SLOT(m_engine->clearImage()));
 
     aboutAct = new QAction(tr("&About"), this);
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));

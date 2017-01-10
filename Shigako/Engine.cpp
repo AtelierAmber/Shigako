@@ -11,10 +11,13 @@
 /* Core Engine                                                         */
 /************************************************************************/
 Engine::Engine(QWidget* parent)
-    : QWidget(parent),
-    m_drawArea(new DrawArea){
+    : QWidget(parent){
     m_imageArea = new QScrollArea;
+    m_drawArea = new DrawArea(m_imageArea);
+    m_imageArea->setBackgroundRole(QPalette::Dark);
     m_imageArea->setWidget(m_drawArea);
+    m_imageArea->setVisible(true);
+    m_drawArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 
     m_adjustments = new Adjustments(this);
     m_colorPicker = new ColorPicker(this);
@@ -22,6 +25,7 @@ Engine::Engine(QWidget* parent)
     m_tools = new Tools(this);
 
     EngineLayout *layout = new EngineLayout;
+    layout->minimumSize();
     layout->addWidget(m_imageArea, EngineLayout::Center);
     layout->addWidget(m_adjustments, EngineLayout::East);
     layout->addWidget(m_colorPicker, EngineLayout::East);
@@ -48,11 +52,21 @@ bool Engine::saveImage(const QString& fileName, const char* fileFormat){
     return m_drawArea->saveImage(fileName, fileFormat);
 }
 
+void Engine::clearImage(){
+    m_drawArea->clearImage();
+}
+
 bool Engine::isModified(){
     return m_drawArea->isModified();
 }
 
+QColor Engine::penColor(){
+    return m_drawArea->penColor();
+}
 
+void Engine::setPenColor(const QColor& color){
+    m_drawArea->setPenColor(color);
+}
 
 /************************************************************************/
 /* Draw Area                                                            */
@@ -60,13 +74,15 @@ bool Engine::isModified(){
 
 DrawArea::DrawArea(QWidget* parent) :
     QWidget(parent),
-    m_image(500, 400, QImage::Format_RGB32),
+    m_image(500, 400, QImage::Format_ARGB32),
     m_lastPoint(-1, -1){
     /* Empty */
-    m_image.fill(qRgb(255, 255, 255));
+    m_image.fill(qRgb(255, 2, 255));
     m_modified = false;
-    m_paintColor = qRgb(0, 0, 0);
-    m_brushes[0] = QBrush(Qt::SolidPattern);
+    m_brushes.emplace_back();
+    m_currentBrush = &m_brushes[0];
+    m_currentBrush->setColor(qRgb(0, 0, 0));
+    setGeometry(QRect(0, 0, 5000, 5000));
 }
 
 DrawArea::~DrawArea(){
@@ -74,18 +90,18 @@ DrawArea::~DrawArea(){
 }
 
 bool DrawArea::openImage(const QString &fileName){
-    QImage image;
-    if (!image.load(fileName))
+    QImage loadedImage;
+    if (!loadedImage.load(fileName))
         return false;
 
-    setImage(image);
-    return true;
-}
-
-void DrawArea::setImage(const QImage &image){
-    m_modified = true;
-    m_image = image;
+    QSize newSize = loadedImage.size().expandedTo(size());
+    resizeImage(&loadedImage, newSize);
+    m_image = loadedImage;
+    m_modified = false;
+    resize(m_image.size());
+    setGeometry(QRect(0, 0, m_image.size().width(), m_image.size().height()));
     update();
+    return true;
 }
 
 bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
@@ -106,7 +122,7 @@ void DrawArea::setPenColor(const QColor &newColor){
 }
 
 void DrawArea::setPenWidth(int newWidth){
-    m_paintWidth = newWidth;
+    m_currentBrush->setWidth(newWidth);
 }
 
 void DrawArea::clearImage(){
@@ -159,9 +175,9 @@ void DrawArea::resizeEvent(QResizeEvent *event){
 }
 
 void DrawArea::drawLineTo(const QPoint &endPoint){
-    m_painter.setPen(QPen(m_paintColor, m_paintWidth, Qt::SolidLine, Qt::FlatCap,
-        Qt::RoundJoin));
-    m_painter.drawLine(lastPoint, endPoint);
+    QPainter painter(&m_image);
+    painter.setPen(m_currentBrush->Pen());
+    painter.drawLine(lastPoint, endPoint);
     m_modified = true;
 
     int rad = (m_paintWidth / 2) + 2;
@@ -182,16 +198,12 @@ void DrawArea::resizeImage(QImage *image, const QSize &newSize){
 }
 
 /************************************************************************/
-/* Shigako Widget                                                                     */
+/* Shigako Widget                                                       */
 /************************************************************************/
 ShigakoWidget::ShigakoWidget(QWidget *parent)
-    : QWidget(parent){
+    : QWidget(parent){ /* Empty */ }
 
-}
-
-ShigakoWidget::~ShigakoWidget(){
-
-}
+ShigakoWidget::~ShigakoWidget(){ /* Empty */}
 
 ShigakoButton ShigakoWidget::addButton(std::function<void()> CallFunction, vec2 size, LocationID location, QString filePath){
     std::printf("Added Button at 0x%04x, with image %s, and a size of %i,%i. Use this function's return to modify the button.\n", location, filePath.toStdString().c_str(), size.x, size.y);
