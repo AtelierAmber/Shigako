@@ -49,13 +49,13 @@ void MainWindow::penColor(){
 }
 
 void MainWindow::penWidth(){
-//     bool ok;
-//     int newWidth = QInputDialog::getInt(this, tr("Scribble"),
-//         tr("Select pen width:"),
-//         scribbleArea->penWidth(),
-//         1, 50, 1, &ok);
-//     if (ok)
-//         scribbleArea->setPenWidth(newWidth);
+     bool ok;
+     int newWidth = QInputDialog::getInt(this, tr("Scribble"),
+         tr("Select pen width:"),
+         m_engine->penWidth(),
+         1, 50, 1, &ok);
+     if (ok)
+         m_engine->setPenWidth(newWidth);
 }
 
 void MainWindow::about(){
@@ -71,6 +71,14 @@ void MainWindow::about(){
         "terminating the application.</p><p> The example also demonstrates "
         "how to use QPainter to draw an image in real time, as well as "
         "to repaint widgets.</p>"));
+}
+
+bool MainWindow::clear(){
+    bool ok = maybeSave();
+    if (ok){
+        m_engine->clearImage();
+    }
+    return ok;
 }
 
 void MainWindow::createActions(){
@@ -100,7 +108,7 @@ void MainWindow::createActions(){
     clearScreenAct = new QAction(tr("&Clear Screen"), this);
     clearScreenAct->setShortcut(tr("Ctrl+L"));
     connect(clearScreenAct, SIGNAL(triggered()),
-        this, SLOT(m_engine->clearImage()));
+        this, SLOT(clear()));
 
     aboutAct = new QAction(tr("&About"), this);
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));

@@ -26,6 +26,7 @@ protected:
     void penColor();
     void penWidth();
     void about();
+    bool clear();
 
 private:
     void createActions();

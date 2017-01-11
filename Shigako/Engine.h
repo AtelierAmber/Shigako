@@ -34,6 +34,8 @@ public:
     bool isModified();
     QColor penColor();
     void setPenColor(const QColor& color);
+    int penWidth();
+    void setPenWidth(int width);
 
 private:
     void setupWidgets();
@@ -55,12 +57,13 @@ enum DrawTool{
 };
 
 struct DrawBrush{
-    DrawBrush(QBrush b, int width = 10) : m_brush(b){
+    DrawBrush(QBrush b, int width = 5) : m_brush(b){
         m_pen = QPen(m_brush, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     }
     DrawBrush(QPen p) : m_pen(p) {}
-    DrawBrush(int width = 10, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::RoundCap, Qt::PenJoinStyle join = Qt::RoundJoin) {
+    DrawBrush(DrawTool tool, int width = 5, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::RoundCap, Qt::PenJoinStyle join = Qt::RoundJoin) {
         m_pen = QPen();
+        m_drawTool = tool;
         m_pen.setStyle(style);
         m_pen.setCapStyle(cap);
         m_pen.setJoinStyle(join);
@@ -69,17 +72,20 @@ struct DrawBrush{
         m_pen.setBrush(Qt::SolidPattern);
     }
 
-    void    setBrush(const QBrush& brush){ m_brush = brush; m_pen.setBrush(brush); }
-    void    setColor(const QColor& color){ m_pen.setColor(color); }
-    const   QColor& getColor() const { return m_pen.color(); }
-    void    setStyle(const Qt::PenStyle& style){ m_pen.setStyle(style); }
-    void    setCap(const Qt::PenCapStyle cap){ m_pen.setCapStyle(cap); }
-    void    setJoin(const Qt::PenJoinStyle& join){ m_pen.setJoinStyle(join); }
-    void    setWidth(int width){ m_pen.setWidth(width); }
-    int     getWidth(){ return m_pen.width(); }
-    QPen    Pen(){ return m_pen; }
+    void        setBrush(const QBrush& brush){ m_brush = brush; m_pen.setBrush(brush); }
+    void        setColor(const QColor& color){ m_pen.setColor(color); }
+    const       QColor& getColor() const { return m_pen.color(); }
+    void        setStyle(const Qt::PenStyle& style){ m_pen.setStyle(style); }
+    void        setCap(const Qt::PenCapStyle cap){ m_pen.setCapStyle(cap); }
+    void        setJoin(const Qt::PenJoinStyle& join){ m_pen.setJoinStyle(join); }
+    void        setWidth(int width){ m_pen.setWidth(width); }
+    int         getWidth(){ return m_pen.width(); }
+    void        setToolType(DrawTool tool){ m_drawTool = tool; }
+    DrawTool    getToolType(){ return m_drawTool; }
+    QPen        Pen(){ return m_pen; }
 
 protected:
+    DrawTool m_drawTool;
     QBrush m_brush;
     QPen m_pen;
 };
@@ -100,7 +106,7 @@ public:
     bool        isModified() const { return m_modified; }
     QColor      penColor() const { return m_currentBrush->getColor(); }
     DrawBrush*  brush() const { return m_currentBrush; }
-    int         paintWidth() const { return m_paintWidth; }
+    int         penWidth() const { return m_currentBrush->getWidth(); }
 
     public slots:
     void        clearImage();
@@ -119,10 +125,8 @@ private:
     std::vector<DrawBrush> m_brushes;
 
     bool m_modified;
-    bool m_scribbling;
-    int m_paintWidth;
+    bool m_drawing;
     QImage m_image;
-    QPoint lastPoint;
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
     QPoint m_lastPoint;
