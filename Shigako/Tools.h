@@ -14,4 +14,5 @@ private:
     void init();
 
     Engine* m_engineParent;
+    ShigakoButton* m_pencil;
 };

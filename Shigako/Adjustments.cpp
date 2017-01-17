@@ -1,7 +1,8 @@
 #include "Adjustments.h"
 
-Adjustments::Adjustments(QWidget *parent)
-    : ShigakoWidget(parent){
+Adjustments::Adjustments(Engine* parent)
+    : ShigakoWidget(parent),
+    m_engineParent(parent){
 
 }
 

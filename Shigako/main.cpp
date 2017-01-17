@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
         throw std::exception();
     }
     std::stringstream sstr;
-    sstr << in.rdbuf();   
+    sstr << in.rdbuf();
     a.setStyleSheet(QString::fromStdString(sstr.str()));
     MainWindow w;
     w.show();

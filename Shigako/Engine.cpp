@@ -19,23 +19,17 @@ Engine::Engine(QWidget* parent)
     m_imageArea->setVisible(true);
     m_drawArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 
-    m_adjustments = new Adjustments(this);
     m_colorPicker = new ColorPicker(this);
+    m_adjustments = new Adjustments(this);
     m_layers = new Layers(this);
     m_tools = new Tools(this);
 
     EngineLayout *layout = new EngineLayout;
-    layout->minimumSize();
     layout->addWidget(m_imageArea, EngineLayout::Center);
     layout->addWidget(m_adjustments, EngineLayout::East);
     layout->addWidget(m_colorPicker, EngineLayout::East);
     layout->addWidget(m_layers, EngineLayout::East);
     layout->addWidget(m_tools, EngineLayout::West);
-//     layout->addWidget(createLabel("North"), EngineLayout::North);
-//     layout->addWidget(createLabel("West"), EngineLayout::West);
-//     layout->addWidget(createLabel("East 1"), EngineLayout::East);
-//     layout->addWidget(createLabel("East 2"), EngineLayout::East);
-//     layout->addWidget(createLabel("South"), EngineLayout::South);
     setLayout(layout);
 }
 
@@ -86,7 +80,11 @@ DrawArea::DrawArea(QWidget* parent) :
     m_modified = false;
     m_brushes.emplace_back(DrawTool::PENCIL);
     m_currentBrush = &m_brushes[0];
-    m_currentBrush->setColor(qRgb(0, 0, 0));
+    m_colors[0] = qRgba(255, 255, 255, 255);
+    m_colors[1] = qRgba(0, 0, 0, 255);
+    m_currentBrush->setColor(m_colors[0]);
+    setFocus(Qt::ActiveWindowFocusReason);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 DrawArea::~DrawArea(){
@@ -132,6 +130,19 @@ void DrawArea::clearImage(){
     m_image.fill(qRgb(255, 255, 255));
     m_modified = true;
     update();
+}
+
+void DrawArea::keyReleaseEvent(QKeyEvent *event){
+    std::printf("\nKey: %i - %s pressed", event->key(), event->text().toStdString().c_str());
+    switch (event->key()){
+    case Qt::Key_X:
+        m_backColor = !m_backColor;
+        m_currentBrush->setColor(m_colors[(int)(m_backColor != 0)]);
+        break;
+    default:
+        QWidget::keyReleaseEvent(event);
+        break;
+    }
 }
 
 void DrawArea::mousePressEvent(QMouseEvent *event){
@@ -207,19 +218,43 @@ void DrawArea::resizeImage(QImage *image, const QSize &newSize){
 /* Shigako Widget                                                       */
 /************************************************************************/
 ShigakoWidget::ShigakoWidget(QWidget *parent)
-    : QWidget(parent){ /* Empty */ }
+    : QWidget(parent){
+    m_layout = new QGridLayout(this);
+}
 
 ShigakoWidget::~ShigakoWidget(){ /* Empty */}
 
-ShigakoButton ShigakoWidget::addButton(std::function<void()> CallFunction, vec2 size, LocationID location, QString filePath){
-    std::printf("Added Button at 0x%04x, with image %s, and a size of %i,%i. Use this function's return to modify the button.\n", location, filePath.toStdString().c_str(), size.x, size.y);
-     return ShigakoButton();
+ShigakoButton* ShigakoWidget::addButton(std::function<void()> CallFunction, Location location, QString filePath){
+    std::printf("Added Button at %i,%i | %i,%i, a size of %i,%i | %i,%i and with image %s. Use this function's return to modify the button.\n", 
+        location.col, location.row, location.x, location.y, location.cSpan, location.rSpan, 
+        location.width, location.height, filePath.toStdString().c_str());
+    ShigakoButton* newButton = new ShigakoButton();
+    newButton->init(filePath, CallFunction);
+    if (location.layout){
+        m_layout->addWidget(newButton, location.row, location.col, location.rSpan, location.cSpan);
+    }
+    else newButton->setGeometry(location.x, location.y, location.width, location.height);
+    return newButton;
 }
-ShigakoLabel ShigakoWidget::addLabel(QString label, LocationID location){
-    std::printf("Added Label at 0x%04x, with label %s. Use this function's return to modify the label.\n", location, label.toStdString().c_str());
-    return ShigakoLabel();
+ShigakoLabel* ShigakoWidget::addLabel(QString label, Location location){
+    std::printf("Added Label at %i,%i | %i,%i, with label %s. Use this function's return to modify the label.\n", 
+        location.col, location.row, location.x, location.y, label.toStdString().c_str());
+    ShigakoLabel* newLabel = new ShigakoLabel();
+    newLabel->init(label);
+    if (location.layout){
+        m_layout->addWidget(newLabel, location.row, location.col, location.rSpan, location.cSpan);
+    }
+    else newLabel->setGeometry(location.x, location.y, location.width, location.height);
+    return newLabel;
 }
-ShigakoImage ShigakoWidget::addImage(QString filePath, LocationID location){
-    std::printf("Added Image at 0x%04x, with image %s. Use this function's return to modify the image.\n", location, filePath.toStdString().c_str());
-    return ShigakoImage();
+ShigakoImage* ShigakoWidget::addImage(QString filePath, Location location){
+    std::printf("Added Image at %i,%i | %i,%i, with image %s. Use this function's return to modify the image.\n", 
+        location.col, location.row, location.x, location.y, filePath.toStdString().c_str());
+    ShigakoImage* newImage = new ShigakoImage();
+    newImage->init(filePath);
+    if (location.layout){
+        m_layout->addWidget(newImage, location.row, location.col, location.rSpan, location.cSpan);
+    }
+    else newImage->setGeometry(location.x, location.y, location.width, location.height);
+    return newImage;
 }

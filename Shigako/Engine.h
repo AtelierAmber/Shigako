@@ -3,11 +3,11 @@
 #include <QImage>
 #include <QPoint>
 #include <QWidget>
-#include <QPainter>
 #include <QLayout>
 #include <QScrollArea>
 #include <QLabel>
 #include <QPushButton>
+#include <QPainter>
 
 #include <functional>
 #include <vector>
@@ -112,6 +112,7 @@ public:
     void        clearImage();
 
 protected:
+    void        keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void        mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void        mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void        mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
@@ -124,8 +125,10 @@ private:
     //Brush ID, Brush
     std::vector<DrawBrush> m_brushes;
 
-    bool m_modified;
-    bool m_drawing;
+    bool m_modified = false;
+    bool m_drawing = false;
+    bool m_backColor = false;
+    QColor m_colors[2];
     QImage m_image;
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
@@ -137,27 +140,30 @@ struct vec2{
     int x, y;
 };
 
-typedef unsigned int LocationID;
-namespace Location{
-    enum{
-        TOP = 0x1,
-        BOTTOM = 0x2,
-        LEFT = 0x4,
-        RIGHT = 0x8,
-        MIDDLE = 0x10,
-    };
+struct Location{
+    Location(int Col, int Row, int RSpan = 1, int CSpan = 1) : 
+        col(Col), row(Row), rSpan(RSpan), cSpan(CSpan), layout(true){ /* Empty */ }
+    Location(int X, int Y, int Width, int Height, void*) : 
+        x(X), y(Y), width(Width), height(Height), layout(false){ /* Empty */ }
+    int col = -1, row = -1, rSpan = 0, cSpan = 0;
+    int x = -1, y = -1, width = 0, height = 0;
+    bool layout = false;
 };
 
 class ShigakoButton :
     public QPushButton{
     Q_OBJECT
 public:
-    void init(QString filePath, std::function<void()> CallFunction, vec2 size, LocationID location){}
+    void init(QString filePath, std::function<void()> CallFunction){
+        
+    }
 
-    bool setIcon(QString fileName){}
-    void setLocation(LocationID location){}
+    bool setIcon(QString fileName){ return true; }
+    void setLocation(Location location){}
     void setCall(std::function<void()> callFunc){}
     void setSize(int w, int h){}
+
+    void callf(){ callFunc(); }
 private:
     std::function<void()> callFunc = nullptr;
 };
@@ -166,14 +172,21 @@ class ShigakoLabel :
     public QLabel{
     Q_OBJECT
 public:
-    void init(QString label, LocationID location){}
+    void init(QString label){
+        this->setText(label);
+    }
 };
 
 class ShigakoImage :
     public QLabel{
     Q_OBJECT
 public:
-    void init(QString filePath, LocationID location){}
+    void init(QString filePath){
+        QPixmap pic;
+        if (!pic.load(filePath)){
+            std::printf("Failed to load %s! Is it there?", filePath.toStdString().c_str());
+        }else this->setPixmap(QPixmap(filePath));
+    }
 };
 
 class ShigakoWidget :
@@ -183,7 +196,9 @@ public:
     ShigakoWidget(QWidget *parent = 0);
     ~ShigakoWidget();
 protected:
-    ShigakoButton addButton(std::function<void()> CallFunction, vec2 size, LocationID location, QString filePath = "NULL");
-    ShigakoLabel addLabel(QString label, LocationID location);
-    ShigakoImage addImage(QString filePath, LocationID location);
+    ShigakoButton* addButton(std::function<void()> CallFunction, Location location, QString filePath = "NULL");
+    ShigakoLabel* addLabel(QString label, Location location);
+    ShigakoImage* addImage(QString filePath, Location location);
+
+    QGridLayout* m_layout;
 };

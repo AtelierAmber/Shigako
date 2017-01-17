@@ -79,7 +79,8 @@ void EngineLayout::setGeometry(const QRect &rect){
     }
 
     centerHeight = rect.height() - northHeight - southHeight;
-
+    
+    QList<QLayoutItem*> eastItems;
     for (i = 0; i < m_items.size(); ++i) {
         ItemWrapper *wrapper = m_items.at(i);
         QLayoutItem *item = wrapper->item;
@@ -92,22 +93,44 @@ void EngineLayout::setGeometry(const QRect &rect){
             westWidth += item->geometry().width() + spacing();
         }
         else if (position == East) {
-            item->setGeometry(QRect(item->geometry().x(), item->geometry().y(),
-                item->sizeHint().width(), centerHeight));
-
-            eastWidth += item->geometry().width() + spacing();
-
-            item->setGeometry(QRect(
-                rect.x() + rect.width() - eastWidth + spacing(),
-                northHeight, item->geometry().width(),
-                item->geometry().height()));
+            if (item->sizeHint().width() > (eastWidth - spacing())){
+                eastWidth = item->sizeHint().width() + spacing();
+            }
+            eastItems.append(item);
         }
     }
 
-    if (center)
+    int curHeight = 0;
+    if (eastItems.size() < 3){
+        std::printf("Not enough east items!");
+    }
+    for (i = 0; i < eastItems.size(); ++i){
+        QLayoutItem *item = eastItems.at(i);
+        switch (i){
+        case 0:
+            item->setGeometry(QRect(rect.width() - (eastWidth + spacing()), 0,
+                eastWidth, item->sizeHint().height()));
+            break;
+        case 1:
+            item->setGeometry(QRect(rect.width() - (eastWidth + spacing()), curHeight,
+                eastWidth, item->sizeHint().height()));
+            break;
+        case 2:
+            item->setGeometry(QRect(rect.width() - (eastWidth + spacing()), curHeight,
+                eastWidth, rect.height() - curHeight));
+            break;
+        default:
+            std::printf("Too many east items!");
+            break;
+        }
+        curHeight += item->sizeHint().height();
+    }
+
+    if (center){
         center->item->setGeometry(QRect(westWidth, northHeight,
-        rect.width() - eastWidth - westWidth,
-        centerHeight));
+            rect.width() - eastWidth - westWidth,
+            centerHeight));
+    }
 }
 
 QSize EngineLayout::sizeHint() const{

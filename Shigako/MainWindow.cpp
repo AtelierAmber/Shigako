@@ -14,7 +14,7 @@ MainWindow::MainWindow(){
     createActions();
     createMenus();
 
-    setWindowTitle(QString::fromStdWString(L"Shigako \u30B7\u30AB\u30B3"));
+    setWindowTitle(QString::fromStdWString(L"Shigako \u30B7\u30ac\u30B3"));
     resize(500, 500);
 }
 
