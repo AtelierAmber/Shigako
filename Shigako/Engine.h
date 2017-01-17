@@ -154,24 +154,40 @@ class ShigakoButton :
     public QPushButton{
     Q_OBJECT
 public:
-    void init(QString filePath, std::function<void()> CallFunction){
-        
+    ShigakoButton(){ /* Empty */ }
+    void init(QString filePath, std::function<void()> CallFunction, QGridLayout* layoutParent){
+        std::printf("%s", (this->setButtonIcon(filePath)) ? "+\n" : "Failed to load icon" + filePath + "! Is it there?\n");
+        m_callFunc = CallFunction;
+        m_layoutParent = layoutParent;
     }
 
-    bool setIcon(QString fileName){ return true; }
-    void setLocation(Location location){}
-    void setCall(std::function<void()> callFunc){}
-    void setSize(int w, int h){}
-
-    void callf(){ callFunc(); }
+    bool setButtonIcon(QString filePath){ 
+        QIcon icon;
+        QPixmap iconP;
+        if (!iconP.load(filePath)){
+            return false;
+        }
+        icon.addPixmap(iconP);
+        this->setIcon(icon);
+        return true;
+    }
+    void setCall(std::function<void()> callFunc){
+        m_callFunc = callFunc;
+        
+    }
+    
+public slots:
+    void callf(){ m_callFunc(); }
 private:
-    std::function<void()> callFunc = nullptr;
+    std::function<void()> m_callFunc = nullptr;
+    QGridLayout* m_layoutParent;
 };
 
 class ShigakoLabel :
     public QLabel{
     Q_OBJECT
 public:
+    ShigakoLabel(){ /* Empty */ }
     void init(QString label){
         this->setText(label);
     }
@@ -181,11 +197,16 @@ class ShigakoImage :
     public QLabel{
     Q_OBJECT
 public:
+    ShigakoImage(){ /* Empty */ }
     void init(QString filePath){
         QPixmap pic;
         if (!pic.load(filePath)){
-            std::printf("Failed to load %s! Is it there?", filePath.toStdString().c_str());
-        }else this->setPixmap(QPixmap(filePath));
+            std::printf("Failed to load %s! Is it there?\n", filePath.toStdString().c_str());
+        }
+        else {
+            this->setPixmap(QPixmap(filePath));
+            std::printf("+\n");
+        }
     }
 };
 
@@ -199,6 +220,8 @@ protected:
     ShigakoButton* addButton(std::function<void()> CallFunction, Location location, QString filePath = "NULL");
     ShigakoLabel* addLabel(QString label, Location location);
     ShigakoImage* addImage(QString filePath, Location location);
+
+    void ButtonCall();
 
     QGridLayout* m_layout;
 };

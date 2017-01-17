@@ -229,11 +229,12 @@ ShigakoButton* ShigakoWidget::addButton(std::function<void()> CallFunction, Loca
         location.col, location.row, location.x, location.y, location.cSpan, location.rSpan, 
         location.width, location.height, filePath.toStdString().c_str());
     ShigakoButton* newButton = new ShigakoButton();
-    newButton->init(filePath, CallFunction);
+    newButton->init(filePath, CallFunction, m_layout);
     if (location.layout){
         m_layout->addWidget(newButton, location.row, location.col, location.rSpan, location.cSpan);
     }
     else newButton->setGeometry(location.x, location.y, location.width, location.height);
+    connect(newButton, SIGNAL(clicked()), newButton, SLOT(callf()));
     return newButton;
 }
 ShigakoLabel* ShigakoWidget::addLabel(QString label, Location location){
