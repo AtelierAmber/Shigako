@@ -19,6 +19,7 @@ class Adjustments : public ShigakoWidget{
     Q_OBJECT
 
 public:
-    Adjustments(QWidget *parent);
+    Adjustments(Engine *parent);
     ~Adjustments();
+    Engine* m_engineParent;
 };

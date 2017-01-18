@@ -7,11 +7,14 @@ Tools::Tools(Engine *parent)
 }
 
 Tools::~Tools(){
-
+    delete m_pencil;
 }
 
 void Tools::init(){
-    addButton([this](){ std::printf("Pressed Button!"); }, vec2(16, 16), Location::MIDDLE | Location::TOP);
-    addButton([this](){ std::printf("Pressed Button2!"); }, vec2(16, 16), Location::MIDDLE | Location::TOP);
-    addButton([this](){ std::printf("Pressed Button3!"); }, vec2(16, 16), Location::MIDDLE | Location::TOP);
+    m_pencil = addButton([this](){ std::printf("Pressed Button!\n"); }, Location(0, 0), "Assets/PencilTool.png");
+    m_eraser = addButton([this](){ std::printf("Pressed Button!\n"); }, Location(0, 1), "Assets/Drawing tool.png");
+    m_eraser->setButtonIcon("Assets/EraserTool.png");
+    m_fill = addButton([this](){ std::printf("Pressed Button!\n"); }, Location(0, 2), "Assets/FillTool.png");
+    m_select = addButton([this](){ std::printf("Pressed Button!\n"); }, Location(0, 3), "Assets/SelectTool.png");
+    m_text = addButton([this](){ std::printf("Pressed Button!\n"); }, Location(0, 4), "Assets/TextTool.png");
 }
