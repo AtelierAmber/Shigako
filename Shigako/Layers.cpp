@@ -10,11 +10,13 @@ Layers::Layers(QWidget *parent)
 	 addLabel(Layer.name, Location(i,3));
 	 //array=m_eyes
 	 
-	 for(int i =0; i<m_engineParent.getlayers()->size(); ++i)
+	 for(int i =0; i< m_engineParent.getlayers()->size(); ++i)
 	 {
 		 m_eyes.push_back(addButton([this](){
-			 
-		 }, Location(x, y, spanw, spanh),;
+			 m_engineParent->togglelayer(m_eyes[i]);
+		}, Location(0, i, 1, 1), "Assets/eye.png");
+		m_eyes[i]->setID(i);
+		 
 }
 
 Layers::ShigakoLayer
