@@ -1,7 +1,8 @@
 #include "Layers.h"
 
 Layers::Layers(Engine *parent)
-    : ShigakoWidget(parent){
+    : ShigakoWidget(parent),
+	m_engineParent(parent){
 	m_add=addButton([this]) () {m_engineparent->addLayer(i); }, "Assets/Add.png");
 	m_eye=addButton([this](){m_engineParent->togglelayer(i); }, "Assets/Eye.png");
 	
