@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QWidget>
-
+#include <vector>
 #include "Engine.h"
 
 //Available functions
@@ -21,4 +21,9 @@ class Layers : public ShigakoWidget{
 public:
     Layers(QWidget *parent);
     ~Layers();
+	
+	std::vector<ShigakoButton*> m_eyes;
+	ShigakoButton* m_add;
+	ShigakoButton* m_layer;
+	ShigakoButton* m_eye;
 };
