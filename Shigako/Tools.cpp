@@ -3,7 +3,6 @@
 Tools::Tools(Engine *parent)
     : ShigakoWidget(parent),
     m_engineParent(parent){
-    r = 0;
     init();
 }
 
@@ -28,19 +27,5 @@ void Tools::init(){
     }, Location(0, 3), "Assets/SelectTool.png");
     m_text = addButton([this](){ 
         std::printf("Setting tool to Text\n"); 
-    }, Location(0, 4), "Assets/TextTool.png");
-
-    m_color = addImage("Assets/Blank.png", Location(0, 5, 3, 3));
-    addSlider(0, 255, &r, true, Location(0, 8, 1, 2), [this](){ 
-        std::printf("%i\n", r); 
-        m_color->setColor(qRgba(r, g, b, 255));
-    });
-    addSlider(0, 255, &g, true, Location(1, 8, 1, 2), [this](){
-        std::printf("%i\n", g);
-        m_color->setColor(qRgba(r, g, b, 255));
-    });
-    addSlider(0, 255, &b, true, Location(2, 8, 1, 2), [this](){
-        std::printf("%i\n", b);
-        m_color->setColor(qRgba(r, g, b, 255));
-    });
+    }, Location(0, 4), "Assets/TextTool.png");    
 }

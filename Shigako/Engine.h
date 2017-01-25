@@ -20,6 +20,7 @@ class Layers;
 class ColorPicker;
 class Tools;
 class EngineLayout;
+class ShigakoLayer;
 
 enum class DrawTool{
     BRUSH = 0,
@@ -49,14 +50,18 @@ public:
     int penWidth();
     void setPenWidth(int width);
     void setDrawTool(const DrawTool& tool);
+    int                         newLayer(const QSize& size);
+    std::vector<ShigakoLayer>*  getLayers();
+    bool                        setLayer(unsigned int num);
+    void                        toggleLayer(unsigned int num);
 
 private:
     
     EngineLayout* m_layout;
     DrawArea* m_drawArea;
     Adjustments* m_adjustments;
-    Layers* m_layers;
     ColorPicker* m_colorPicker;
+    Layers* m_layers;
     Tools* m_tools;
     QScrollArea* m_imageArea;
 };
@@ -207,12 +212,16 @@ public:
         m_callFunc = callFunc;
         
     }
-    
+
+    int ID() const { return m_ID; }
+    void setID(int id){ m_ID = id; }
+
 public slots:
     void callf(){ m_callFunc(); }
 private:
     std::function<void()> m_callFunc = nullptr;
     QGridLayout* m_layoutParent;
+    int m_ID = -1;
 };
 
 class ShigakoLabel :

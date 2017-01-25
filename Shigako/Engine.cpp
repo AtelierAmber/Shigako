@@ -82,6 +82,22 @@ void Engine::setDrawTool(const DrawTool& tool){
     m_drawArea->setDrawTool(tool);
 }
 
+int Engine::newLayer(const QSize& size){
+    return m_drawArea->newLayer(size);
+}
+
+std::vector<ShigakoLayer>* Engine::getLayers(){
+    return m_drawArea->getLayers();
+}
+
+bool Engine::setLayer(unsigned int num){
+    return m_drawArea->setLayer(num);
+}
+
+void Engine::toggleLayer(unsigned int num){
+    m_drawArea->toggleLayer(num);
+}
+
 /************************************************************************/
 /* Draw Area                                                            */
 /************************************************************************/

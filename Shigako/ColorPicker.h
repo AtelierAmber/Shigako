@@ -22,9 +22,9 @@ public:
     ColorPicker(Engine *parent);
     ~ColorPicker(); 
 	private:
-	int r;
-	int g;
-	int b;
+	int r = 0;
+	int g = 0;
+	int b = 0;
 	ShigakoImage* color;
 	
 private:
