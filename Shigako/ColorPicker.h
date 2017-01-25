@@ -19,6 +19,14 @@ class ColorPicker : public ShigakoWidget{
     Q_OBJECT
 
 public:
-    ColorPicker(QWidget *parent);
-    ~ColorPicker();
+    ColorPicker(Engine *parent);
+    ~ColorPicker(); 
+	private:
+	int r;
+	int g;
+	int b;
+	ShigakoImage* color;
+	
+private:
+	Engine* m_engineParent;
 };
