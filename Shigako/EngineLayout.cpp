@@ -6,9 +6,11 @@ EngineLayout::EngineLayout(QWidget *parent, int margin /* = 0 */, int spacing /*
 }
 
 EngineLayout::~EngineLayout(){
-    QLayoutItem *l;
-    while ((l = takeAt(0)))
-        delete l;
+    for (auto& itr : m_items){
+        delete itr->item;
+        delete itr;
+    }
+    m_items.clear();
 }
 
 void EngineLayout::addItem(QLayoutItem *item){
@@ -137,7 +139,7 @@ QSize EngineLayout::sizeHint() const{
     return calculateSize(SizeHint);
 }
 
-QLayoutItem * EngineLayout::takeAt(int index){
+QLayoutItem* EngineLayout::takeAt(int index){
     if (index >= 0 && index < m_items.size()) {
         ItemWrapper *layoutStruct = m_items.takeAt(index);
         return layoutStruct->item;

@@ -2,7 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QList>
+#include <QtWidgets>
 #include <QMainWindow>
+#include <QWizard>
 
 class Engine;
 
@@ -16,12 +18,14 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow();
+    void engineNewImage(const QSize& size, const QColor& color);
 
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
     private slots:
     void open();
+    void newI();
     void save();
     void penColor();
     void penWidth();
@@ -42,6 +46,7 @@ private:
     QMenu* helpMenu;
 
     QAction* openAct;
+    QAction* newAct;
     QList<QAction* > saveAsActs;
     QAction* exitAct;
     QAction* penColorAct;
@@ -49,6 +54,46 @@ private:
     QAction* clearScreenAct;
     QAction* aboutAct;
     QAction* aboutQtAct;
+};
+
+class ImagePage :
+    public QWizardPage{
+    Q_OBJECT
+public:
+    ImagePage(QWidget* parent = 0);
+
+private:
+    QGridLayout* m_gridLayout;
+    QLabel* m_sizeLabel;
+    QLabel* m_widthLabel;
+    QLineEdit* m_width;
+    QLabel* m_heightLabel;
+    QLineEdit* m_height;
+    QLabel* m_backgroundColorLabel;
+    QGroupBox* m_backgroundColorBox;
+    QHBoxLayout* m_horizontalLayout;
+    QRadioButton* m_transparent;
+    QRadioButton* m_white;
+    QRadioButton* m_black;
+};
+
+class NewImageWizard :
+    public QWizard{
+    Q_OBJECT
+public:
+    NewImageWizard(MainWindow* mainWindow);
+
+    void accept() override;
+
+    int iW;
+    int iH;
+    QColor iBackg;
+    bool isDone = false;
+
+private:
+    MainWindow* m_parentWindow;
+
+    ImagePage* m_page;
 };
 
 #endif

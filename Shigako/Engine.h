@@ -2,6 +2,7 @@
 #include <QColor>
 #include <QImage>
 #include <QPoint>
+#include <QSlider>
 #include <QWidget>
 #include <QLayout>
 #include <QScrollArea>
@@ -18,6 +19,16 @@ class Adjustments;
 class Layers;
 class ColorPicker;
 class Tools;
+class EngineLayout;
+
+enum class DrawTool{
+    BRUSH = 0,
+    PENCIL = 1,
+    ERASER,
+    SELECT,
+    TEXT,
+    FILL
+};
 
 class Engine : 
     public QWidget{
@@ -29,6 +40,7 @@ public:
 
     void openImage(const QString& filename);
     bool saveImage(const QString& fileName, const char* fileFormat);
+    void newImage(const QSize& size, const QColor& color);
     void clearImage();
 
     bool isModified();
@@ -36,24 +48,17 @@ public:
     void setPenColor(const QColor& color);
     int penWidth();
     void setPenWidth(int width);
+    void setDrawTool(const DrawTool& tool);
 
 private:
-    void setupWidgets();
     
+    EngineLayout* m_layout;
     DrawArea* m_drawArea;
     Adjustments* m_adjustments;
     Layers* m_layers;
     ColorPicker* m_colorPicker;
     Tools* m_tools;
     QScrollArea* m_imageArea;
-};
-
-enum DrawTool{
-    BRUSH,
-    SELECT,
-    PENCIL,
-    TEXT,
-    FILL
 };
 
 struct DrawBrush{
@@ -90,23 +95,48 @@ protected:
     QPen m_pen;
 };
 
+class ShigakoLayer{
+public:
+    ShigakoLayer(){ }
+    ShigakoLayer(const QSize& size, QImage::Format iFormat) :
+        m_image(size, iFormat){ }
+
+    QImage* data(){ return &m_image; }
+    bool isHidden() const { return m_hidden; }
+    void toggle(){ m_hidden = !m_hidden; }
+
+private:
+    bool m_hidden = false;
+    QImage m_image;
+};
+
 class DrawArea :
     public QWidget{
     Q_OBJECT
 
 public:
     DrawArea(QWidget* parent = 0);
+    QImage checkers(int size);
     ~DrawArea();
 
     bool        openImage(const QString &fileName);
     bool        saveImage(const QString &fileName, const char *fileFormat);
-    void        setPenColor(const QColor &newColor);
-    void        setPenWidth(int newWidth);
+    void        newImage(const QSize& size, const QColor& color = qRgba(0, 0, 0, 0));
+
+    void        setPenColor(const QColor &newColor){ m_colors[(int)(m_backColor)] = newColor; m_currentBrush->setColor(newColor); }
+    void        setPenWidth(int newWidth){ m_currentBrush->setWidth(newWidth); }
+    void        setDrawTool(const DrawTool& tool);
 
     bool        isModified() const { return m_modified; }
     QColor      penColor() const { return m_currentBrush->getColor(); }
     DrawBrush*  brush() const { return m_currentBrush; }
     int         penWidth() const { return m_currentBrush->getWidth(); }
+    void        createBrushes();
+
+    int                         newLayer(const QSize& size){ m_layers.emplace_back(size, QImage::Format_A2BGR30_Premultiplied); return m_layers.size() - 1; }
+    std::vector<ShigakoLayer>*  getLayers(){ return &m_layers; }
+    bool                        setLayer(unsigned int num);
+    void                        toggleLayer(unsigned int num){ m_layers[num].toggle(); }
 
     public slots:
     void        clearImage();
@@ -117,10 +147,9 @@ protected:
     void        mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void        mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void        paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
-    void        resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+
 private:
     void        drawLineTo(const QPoint &endPoint);
-    void        resizeImage(QImage *image, const QSize &newSize);
 
     //Brush ID, Brush
     std::vector<DrawBrush> m_brushes;
@@ -129,7 +158,9 @@ private:
     bool m_drawing = false;
     bool m_backColor = false;
     QColor m_colors[2];
-    QImage m_image;
+    unsigned int m_currentImage = 0;
+    std::vector<ShigakoLayer> m_layers;
+    QColor m_imageBackground;
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
     QPoint m_lastPoint;
@@ -169,6 +200,7 @@ public:
         }
         icon.addPixmap(iconP);
         this->setIcon(icon);
+        std::printf("+\n");
         return true;
     }
     void setCall(std::function<void()> callFunc){
@@ -190,6 +222,7 @@ public:
     ShigakoLabel(){ /* Empty */ }
     void init(QString label){
         this->setText(label);
+        std::printf("+\n");
     }
 };
 
@@ -199,15 +232,50 @@ class ShigakoImage :
 public:
     ShigakoImage(){ /* Empty */ }
     void init(QString filePath){
-        QPixmap pic;
-        if (!pic.load(filePath)){
+        if (!m_pic.load(filePath)){
             std::printf("Failed to load %s! Is it there?\n", filePath.toStdString().c_str());
         }
         else {
-            this->setPixmap(QPixmap(filePath));
+            this->setPixmap(m_pic);
             std::printf("+\n");
         }
     }
+
+    void setColor(const QColor& color){
+        m_pic.fill(color);
+        this->setPixmap(m_pic);
+    }
+
+private:
+    QPixmap m_pic;
+};
+
+class ShigakoSlider :
+    public QSlider{
+    Q_OBJECT
+public:
+    ShigakoSlider(){ /* Empty */ }
+    void init(int max, int min, int* val, bool upDown, std::function<void()> CallFunction){
+        this->setMinimum(min);
+        this->setMaximum(max);
+        this->setTickInterval(1);
+        this->setOrientation((upDown) ? Qt::Vertical : Qt::Horizontal);
+        this->setFocusPolicy(Qt::StrongFocus);
+        this->setTickPosition(QSlider::NoTicks);
+        valueDef = val;
+        connect(this, SIGNAL(valueChanged(int)), this, SLOT(editValue(int)));
+        m_callF = CallFunction;
+    }
+
+public slots:
+    void editValue(int val){
+        *valueDef = val;
+        m_callF();
+    }
+
+private:
+    int* valueDef;
+    std::function<void()> m_callF;;
 };
 
 class ShigakoWidget :
@@ -220,8 +288,10 @@ protected:
     ShigakoButton* addButton(std::function<void()> CallFunction, Location location, QString filePath = "NULL");
     ShigakoLabel* addLabel(QString label, Location location);
     ShigakoImage* addImage(QString filePath, Location location);
-
+    ShigakoSlider* addSlider(int min, int max, int* val, bool upDown, Location location, std::function<void()> CallFunction);
+    
     void ButtonCall();
 
     QGridLayout* m_layout;
+    vec2 m_mousePos;
 };

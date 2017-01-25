@@ -1,6 +1,4 @@
-﻿#include <QtWidgets>
-#include <QLabel>
-#include <QTextBrowser>
+﻿#include <QLabel>
 
 #include "MainWindow.h"
 #include "ScribbleArea.h"
@@ -33,6 +31,13 @@ void MainWindow::open(){
             tr("Open File"), QDir::currentPath());
         if (!fileName.isEmpty())
             m_engine->openImage(fileName);
+    }
+}
+
+void MainWindow::newI(){
+    if (maybeSave()){
+        NewImageWizard* wizard = new NewImageWizard(this);
+        wizard->show();
     }
 }
 
@@ -81,6 +86,10 @@ bool MainWindow::clear(){
     return ok;
 }
 
+void MainWindow::engineNewImage(const QSize& size, const QColor& color){
+    m_engine->newImage(size, color);
+}
+
 void MainWindow::createActions(){
     openAct = new QAction(tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
@@ -98,6 +107,9 @@ void MainWindow::createActions(){
     exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+
+    newAct = new QAction(tr("&New"), this);
+    connect(newAct, SIGNAL(triggered()), this, SLOT(newI()));
 
     penColorAct = new QAction(tr("&Pen Color..."), this);
     connect(penColorAct, SIGNAL(triggered()), this, SLOT(penColor()));
@@ -127,6 +139,7 @@ void MainWindow::createMenus(){
     fileMenu->addMenu(saveAsMenu);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
+    fileMenu->addAction(newAct);
 
     optionMenu = new QMenu(tr("&Options"), this);
     optionMenu->addAction(penColorAct);
@@ -176,4 +189,91 @@ bool MainWindow::saveFile(const QByteArray &fileFormat){
         return m_engine->saveImage(fileName, fileFormat.constData());
         return true;
     }
+}
+
+ImagePage::ImagePage(QWidget* parent):
+    QWizardPage(parent){
+    setTitle("New Image");
+    resize(251, 221);
+
+    m_gridLayout = new QGridLayout(this);
+    m_gridLayout->setContentsMargins(0, 0, 0, 0);
+    m_gridLayout->setGeometry(QRect(10, 10, 226, 201));
+
+    m_sizeLabel = new QLabel(this);
+    m_gridLayout->addWidget(m_sizeLabel, 0, 0, 1, 3);
+
+    m_widthLabel = new QLabel(this);
+    m_gridLayout->addWidget(m_widthLabel, 1, 0, 1, 1);
+    m_width = new QLineEdit(this);
+    m_gridLayout->addWidget(m_width, 1, 1, 1, 2);
+
+    m_heightLabel = new QLabel(this);
+    m_gridLayout->addWidget(m_heightLabel, 2, 0, 1, 1);
+    m_height = new QLineEdit(this);
+    m_gridLayout->addWidget(m_height, 2, 1, 1, 2);
+
+    m_backgroundColorLabel = new QLabel(this);
+    m_gridLayout->addWidget(m_backgroundColorLabel, 4, 0, 1, 3);
+    m_backgroundColorBox = new QGroupBox(this);
+    m_horizontalLayout = new QHBoxLayout(m_backgroundColorBox);
+    m_transparent = new QRadioButton(m_backgroundColorBox);
+    m_horizontalLayout->addWidget(m_transparent);
+
+    m_white = new QRadioButton(m_backgroundColorBox);
+    m_horizontalLayout->addWidget(m_white);
+
+    m_black = new QRadioButton(m_backgroundColorBox);
+    m_horizontalLayout->addWidget(m_black);
+
+    m_gridLayout->addWidget(m_backgroundColorBox, 5, 0, 1, 3);
+
+    m_sizeLabel->setText(QString("--Size:------------------------------------------------"));
+    m_widthLabel->setText(QString("Width"));
+    m_width->setText(QString());
+    m_width->setToolTip(QString("pixels"));
+
+    m_heightLabel->setText(QString(" Height:"));
+    m_height->setText(QString());
+    m_height->setToolTip(QString("pixels"));
+
+    m_backgroundColorLabel->setText(QString("--Background Color:--------------------------------"));
+    m_backgroundColorBox->setTitle(QString());
+    m_transparent->setText(QString("Transparent"));
+    m_white->setText(QString("White"));
+    m_black->setText(QString("Black"));
+
+    registerField("iWidth", m_width);
+    registerField("iHeight", m_height);
+    registerField("iBackTrans", m_transparent);
+    registerField("iBackWhite", m_white);
+    registerField("iBackBlack", m_black);
+
+    setLayout(m_gridLayout);
+}
+
+NewImageWizard::NewImageWizard(MainWindow* mainWindow){
+    setWindowTitle("New Image");
+    setOptions(QWizard::CancelButtonOnLeft);
+    m_page = new ImagePage(this);
+    addPage(m_page);
+    m_parentWindow = mainWindow;
+}
+
+void NewImageWizard::accept(){
+    iW = field("iWidth").toInt();
+    iH = field("iHeight").toInt();
+    if (field("iBackTrans").toBool()){
+        iBackg = qRgba(0, 0, 0, 0);
+    }
+    else if (field("iBackWhite").toBool()){
+        iBackg = qRgba(255, 255, 255, 255);
+    }
+    else if (field("iBackBlack").toBool()){
+        iBackg = qRgba(0, 0, 0, 255);
+    }
+    isDone = true;
+    m_parentWindow->engineNewImage(QSize(iW, iH), iBackg);
+    QDialog::accept();
+    delete this;
 }

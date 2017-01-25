@@ -19,4 +19,9 @@ private:
     ShigakoButton* m_fill;
     ShigakoButton* m_select;
     ShigakoButton* m_text;
+    ShigakoImage* m_color;
+
+    int r;
+    int g;
+    int b;
 };

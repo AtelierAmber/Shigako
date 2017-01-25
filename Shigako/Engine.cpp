@@ -24,19 +24,23 @@ Engine::Engine(QWidget* parent)
     m_layers = new Layers(this);
     m_tools = new Tools(this);
 
-    EngineLayout *layout = new EngineLayout;
-    layout->addWidget(m_imageArea, EngineLayout::Center);
-    layout->addWidget(m_adjustments, EngineLayout::East);
-    layout->addWidget(m_colorPicker, EngineLayout::East);
-    layout->addWidget(m_layers, EngineLayout::East);
-    layout->addWidget(m_tools, EngineLayout::West);
-    setLayout(layout);
+    m_layout = new EngineLayout;
+    m_layout->addWidget(m_imageArea, EngineLayout::Center);
+    m_layout->addWidget(m_adjustments, EngineLayout::East);
+    m_layout->addWidget(m_colorPicker, EngineLayout::East);
+    m_layout->addWidget(m_layers, EngineLayout::East);
+    m_layout->addWidget(m_tools, EngineLayout::West);
+    setLayout(m_layout);
 }
 
 Engine::~Engine(){
-
+    delete m_layout;
+    delete m_imageArea;
+    delete m_colorPicker;
+    delete m_adjustments;
+    delete m_layers;
+    delete m_tools;
 }
-
 
 void Engine::openImage(const QString& filename){
     m_drawArea->openImage(filename);
@@ -44,6 +48,10 @@ void Engine::openImage(const QString& filename){
 
 bool Engine::saveImage(const QString& fileName, const char* fileFormat){
     return m_drawArea->saveImage(fileName, fileFormat);
+}
+
+void Engine::newImage(const QSize& size, const QColor& color){
+    m_drawArea->newImage(size, color);
 }
 
 void Engine::clearImage(){
@@ -70,44 +78,65 @@ void Engine::setPenWidth(int width){
     m_drawArea->setPenWidth(width);
 }
 
+void Engine::setDrawTool(const DrawTool& tool){
+    m_drawArea->setDrawTool(tool);
+}
+
 /************************************************************************/
 /* Draw Area                                                            */
 /************************************************************************/
 
 DrawArea::DrawArea(QWidget* parent) :
-    QWidget(parent), m_image(500, 400, QImage::Format_ARGB32), m_lastPoint(-1, -1){
-    m_image.fill(qRgb(255, 2, 255));
+    QWidget(parent), m_lastPoint(-1, -1){
+    newLayer(QSize(256, 256));
+    m_layers[0].data()->fill(qRgba(255, 255, 255, 255));
     m_modified = false;
-    m_brushes.emplace_back(DrawTool::PENCIL);
+    createBrushes();
     m_currentBrush = &m_brushes[0];
     m_colors[0] = qRgba(255, 255, 255, 255);
     m_colors[1] = qRgba(0, 0, 0, 255);
     m_currentBrush->setColor(m_colors[0]);
     setFocus(Qt::ActiveWindowFocusReason);
     setFocusPolicy(Qt::StrongFocus);
+    update();
 }
 
 DrawArea::~DrawArea(){
 
 }
 
+void DrawArea::createBrushes(){
+    m_brushes.emplace_back(DrawTool::BRUSH);
+    m_brushes.emplace_back(DrawTool::PENCIL);
+}
+
 bool DrawArea::openImage(const QString &fileName){
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-
-    QSize newSize = loadedImage.size().expandedTo(size());
-    resizeImage(&loadedImage, newSize);
-    m_image = loadedImage;
+    loadedImage.convertToFormat(QImage::Format_A2BGR30_Premultiplied);
+    m_imageBackground = qRgba(0, 0, 0, 0);
+    QSize newSize = loadedImage.size();
+    m_layers.clear();
+    newLayer(newSize);
+    *(m_layers[0].data()) = loadedImage;
     m_modified = false;
-    resize(m_image.size());
+    this->setGeometry(QRect(0, 0, newSize.width(), newSize.height()));
     update();
     return true;
 }
 
 bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
-    QImage visibleImage = m_image;
-    resizeImage(&visibleImage, size());
+    QPainter p(m_layers[0].data());
+    p.setCompositionMode(QPainter::CompositionMode_Source);
+    p.drawRect(m_layers[0].data()->rect());
+    for (int i = 0; i < m_layers.size(); ++i){
+        if (!m_layers[i].isHidden()){
+            p.drawImage(0, 0, *(m_layers[i].data()));
+            p.end();
+        }
+    }
+    QImage visibleImage = *(m_layers[0].data());
 
     if (visibleImage.save(fileName, fileFormat)) {
         m_modified = false;
@@ -118,18 +147,38 @@ bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
     }
 }
 
-void DrawArea::setPenColor(const QColor &newColor){
-    m_currentBrush->setColor(newColor);
+void DrawArea::newImage(const QSize& imageSize, const QColor& color /*= qRgba(0, 0, 0, 0)*/){
+    m_layers.clear();
+    newLayer(imageSize);
+    m_imageBackground = color;
+    m_layers[0].data()->fill(color);
+    m_modified = false;
+    update();
+    this->setGeometry(QRect(0, 0, imageSize.width(), imageSize.height()));
 }
 
-void DrawArea::setPenWidth(int newWidth){
-    m_currentBrush->setWidth(newWidth);
+void DrawArea::setDrawTool(const DrawTool& tool){
+    m_currentTool = tool;
+    if ((int)tool < m_brushes.size()){
+        m_currentBrush = &m_brushes[(int)tool];
+    }
 }
 
 void DrawArea::clearImage(){
-    m_image.fill(qRgb(255, 255, 255));
+    QSize size = m_layers[0].data()->size();
+    m_layers.clear();
+    newLayer(size);
+    m_layers[0].data()->fill(m_imageBackground);
     m_modified = true;
     update();
+}
+
+bool DrawArea::setLayer(unsigned int num){
+    if (num < m_layers.size()){
+        m_currentImage = num;
+        return true;
+    }
+    return false;
 }
 
 void DrawArea::keyReleaseEvent(QKeyEvent *event){
@@ -137,7 +186,7 @@ void DrawArea::keyReleaseEvent(QKeyEvent *event){
     switch (event->key()){
     case Qt::Key_X:
         m_backColor = !m_backColor;
-        m_currentBrush->setColor(m_colors[(int)(m_backColor != 0)]);
+        m_currentBrush->setColor(m_colors[(int)(m_backColor)]);
         break;
     default:
         QWidget::keyReleaseEvent(event);
@@ -148,6 +197,9 @@ void DrawArea::keyReleaseEvent(QKeyEvent *event){
 void DrawArea::mousePressEvent(QMouseEvent *event){
     //Left mouse button
     if (event->button() == Qt::LeftButton) {
+        switch (m_currentTool){
+
+        }
         m_lastPoint = event->pos();
         m_drawing = true;
         drawLineTo(event->pos());
@@ -171,25 +223,18 @@ void DrawArea::mouseReleaseEvent(QMouseEvent *event){
     }
 }
 
-void DrawArea::paintEvent(QPaintEvent *event)
-{
+void DrawArea::paintEvent(QPaintEvent *event){
     QPainter painter(this);
-    QRect dirtyRect = event->rect();
-    painter.drawImage(dirtyRect, m_image, dirtyRect);
-}
-
-void DrawArea::resizeEvent(QResizeEvent *event){
-    if (width() > m_image.width() || height() > m_image.height()) {
-        int newWidth = qMax(width() + 128, m_image.width());
-        int newHeight = qMax(height() + 128, m_image.height());
-        resizeImage(&m_image, QSize(newWidth, newHeight));
-        update();
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    for (int i = 0; i < m_layers.size(); ++i){
+        if (!m_layers[i].isHidden()){
+            painter.drawImage(0, 0, *(m_layers[i].data()));
+        }
     }
-    QWidget::resizeEvent(event);
 }
 
 void DrawArea::drawLineTo(const QPoint &endPoint){
-    QPainter painter(&m_image);
+    QPainter painter(m_layers[m_currentImage].data());
     painter.setPen(m_currentBrush->Pen());
     if (m_lastPoint == endPoint){
         painter.drawPoint(endPoint);
@@ -203,22 +248,11 @@ void DrawArea::drawLineTo(const QPoint &endPoint){
     m_lastPoint = endPoint;
 }
 
-void DrawArea::resizeImage(QImage *image, const QSize &newSize){
-    if (image->size() == newSize)
-        return;
-
-    QImage newImage(newSize, QImage::Format_RGB32);
-    newImage.fill(qRgb(0, 0, 0));
-    QPainter painter(&newImage);
-    painter.drawImage(QPoint(0, 0), *image);
-    *image = newImage;
-}
-
 /************************************************************************/
 /* Shigako Widget                                                       */
 /************************************************************************/
 ShigakoWidget::ShigakoWidget(QWidget *parent)
-    : QWidget(parent){
+    : QWidget(parent), m_mousePos(0, 0){
     m_layout = new QGridLayout(this);
 }
 
@@ -258,4 +292,16 @@ ShigakoImage* ShigakoWidget::addImage(QString filePath, Location location){
     }
     else newImage->setGeometry(location.x, location.y, location.width, location.height);
     return newImage;
+}
+
+ShigakoSlider* ShigakoWidget::addSlider(int min, int max, int* val, bool upDown, Location location, std::function<void()> CallFunction){
+    std::printf("Added Slider at %i,%i | %i,%i, with min %i, max %i, and orientation %i. Use this function's return to modify the slider.\n",
+        location.col, location.row, location.x, location.y, min, max, (int)upDown);
+    ShigakoSlider* newSlider = new ShigakoSlider();
+    newSlider->init(max, min, val, upDown, CallFunction);
+    if (location.layout){
+        m_layout->addWidget(newSlider, location.row, location.col, location.rSpan, location.cSpan);
+    }
+    else newSlider->setGeometry(location.x, location.y, location.width, location.height);
+    return newSlider;
 }
