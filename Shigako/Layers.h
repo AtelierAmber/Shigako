@@ -19,11 +19,14 @@ class Layers : public ShigakoWidget{
     Q_OBJECT
 
 public:
-    Layers(QWidget *parent);
+    Layers(Engine *parent);
     ~Layers();
 	
 	std::vector<ShigakoButton*> m_eyes;
 	ShigakoButton* m_add;
 	ShigakoButton* m_layer;
 	ShigakoButton* m_eye;
+
+private:
+		Engine* m_engineParent;
 };
