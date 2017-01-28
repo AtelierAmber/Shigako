@@ -14,6 +14,7 @@ private:
     void init();
 
     Engine* m_engineParent;
+    ShigakoButton* m_paint;
     ShigakoButton* m_pencil;
     ShigakoButton* m_eraser;
     ShigakoButton* m_fill;

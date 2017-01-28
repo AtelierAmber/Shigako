@@ -24,7 +24,7 @@ public:
 	
 	std::vector<ShigakoButton*> m_eyes;
 	ShigakoButton* m_add;
-	ShigakoButton* m_layer;
+	std::vector<ShigakoButton* > m_layerButtons;
 	ShigakoButton* m_eye;
 
 private:

@@ -25,7 +25,7 @@ class ShigakoLayer;
 enum class DrawTool{
     BRUSH = 0,
     PENCIL = 1,
-    ERASER,
+    ERASER = 2,
     SELECT,
     TEXT,
     FILL
@@ -128,7 +128,7 @@ public:
     bool        saveImage(const QString &fileName, const char *fileFormat);
     void        newImage(const QSize& size, const QColor& color = qRgba(0, 0, 0, 0));
 
-    void        setPenColor(const QColor &newColor){ m_colors[(int)(m_backColor)] = newColor; m_currentBrush->setColor(newColor); }
+    void        setPenColor(const QColor &newColor){ m_colors[0] = newColor; m_currentBrush->setColor(newColor); }
     void        setPenWidth(int newWidth){ m_currentBrush->setWidth(newWidth); }
     void        setDrawTool(const DrawTool& tool);
 
@@ -155,17 +155,15 @@ protected:
 
 private:
     void        drawLineTo(const QPoint &endPoint);
+    void        recursiveFill(const QPoint& curPoint, const QColor& targetColor, const QColor& fillColor, int itr);
 
     //Brush ID, Brush
     std::vector<DrawBrush> m_brushes;
-
     bool m_modified = false;
     bool m_drawing = false;
-    bool m_backColor = false;
     QColor m_colors[2];
     unsigned int m_currentImage = 0;
     std::vector<ShigakoLayer> m_layers;
-    QColor m_imageBackground;
     DrawTool m_currentTool;
     DrawBrush* m_currentBrush;
     QPoint m_lastPoint;

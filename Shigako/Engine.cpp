@@ -123,7 +123,8 @@ DrawArea::~DrawArea(){
 
 void DrawArea::createBrushes(){
     m_brushes.emplace_back(DrawTool::BRUSH);
-    m_brushes.emplace_back(DrawTool::PENCIL);
+    m_brushes.emplace_back(DrawTool::PENCIL, 5, Qt::SolidLine, Qt::FlatCap, Qt::BevelJoin);
+    m_brushes.emplace_back(DrawTool::ERASER);
 }
 
 bool DrawArea::openImage(const QString &fileName){
@@ -131,7 +132,7 @@ bool DrawArea::openImage(const QString &fileName){
     if (!loadedImage.load(fileName))
         return false;
     loadedImage.convertToFormat(QImage::Format_A2BGR30_Premultiplied);
-    m_imageBackground = qRgba(0, 0, 0, 0);
+    m_colors[1] = qRgba(0, 0, 0, 0);
     QSize newSize = loadedImage.size();
     m_layers.clear();
     newLayer(newSize);
@@ -166,7 +167,7 @@ bool DrawArea::saveImage(const QString &fileName, const char *fileFormat){
 void DrawArea::newImage(const QSize& imageSize, const QColor& color /*= qRgba(0, 0, 0, 0)*/){
     m_layers.clear();
     newLayer(imageSize);
-    m_imageBackground = color;
+    m_colors[1] = color;
     m_layers[0].data()->fill(color);
     m_modified = false;
     update();
@@ -184,7 +185,7 @@ void DrawArea::clearImage(){
     QSize size = m_layers[0].data()->size();
     m_layers.clear();
     newLayer(size);
-    m_layers[0].data()->fill(m_imageBackground);
+    m_layers[0].data()->fill(m_colors[1]);
     m_modified = true;
     update();
 }
@@ -200,13 +201,51 @@ bool DrawArea::setLayer(unsigned int num){
 void DrawArea::keyReleaseEvent(QKeyEvent *event){
     std::printf("\nKey: %i - %s pressed", event->key(), event->text().toStdString().c_str());
     switch (event->key()){
-    case Qt::Key_X:
-        m_backColor = !m_backColor;
-        m_currentBrush->setColor(m_colors[(int)(m_backColor)]);
-        break;
+//     case Qt::Key_X:
+//         m_backColor = !m_backColor;
+//         m_currentBrush->setColor(m_colors[(int)(m_backColor)]);
+//         break;
     default:
         QWidget::keyReleaseEvent(event);
         break;
+    }
+}
+
+#define FILL_THRESHOLD 15
+
+bool withinThreshold(const QColor& a, const QColor& b){
+    if (b.red() >= a.red() - FILL_THRESHOLD && b.red() <= a.red() + FILL_THRESHOLD){
+        if (b.green() >= a.green() - FILL_THRESHOLD && b.green() <= a.green() + FILL_THRESHOLD){
+            if (b.blue() >= a.blue() - FILL_THRESHOLD && b.blue() <= a.blue() + FILL_THRESHOLD){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void DrawArea::recursiveFill(const QPoint& curPoint, const QColor& targetColor, const QColor& fillColor, int itr){
+    if (itr > 8000){
+        return;
+    }
+    auto layerData = m_layers[m_currentImage].data();
+    if (curPoint.x() > layerData->size().width()-1 || curPoint.x() < 0
+        || curPoint.y() > layerData->size().height()-1 || curPoint.y() < 0){
+        return;
+    }
+    if (layerData->pixelColor(curPoint) == fillColor){
+        return;
+    }
+    if (!withinThreshold(layerData->pixelColor(curPoint), targetColor)){
+        return;
+    }
+    else{
+        layerData->setPixelColor(curPoint, fillColor);
+        recursiveFill(QPoint(curPoint.x() + 1, curPoint.y()), targetColor, fillColor, itr + 1);
+        recursiveFill(QPoint(curPoint.x() - 1, curPoint.y()), targetColor, fillColor, itr + 1);
+        recursiveFill(QPoint(curPoint.x(), curPoint.y() + 1), targetColor, fillColor, itr + 1);
+        recursiveFill(QPoint(curPoint.x(), curPoint.y() - 1), targetColor, fillColor, itr + 1);
+        return;
     }
 }
 
@@ -214,11 +253,29 @@ void DrawArea::mousePressEvent(QMouseEvent *event){
     //Left mouse button
     if (event->button() == Qt::LeftButton) {
         switch (m_currentTool){
-
+        case DrawTool::PENCIL:
+        case DrawTool::BRUSH:
+            m_currentBrush->setColor(m_colors[0]);
+            m_lastPoint = event->pos();
+            m_drawing = true;
+            drawLineTo(event->pos());
+            break;
+        case DrawTool::ERASER:
+            m_currentBrush->setColor(m_colors[1]);
+            m_lastPoint = event->pos();
+            m_drawing = true;
+            drawLineTo(event->pos());
+            break;
+        case DrawTool::FILL:
+        {
+            m_lastPoint = event->pos();
+            recursiveFill(event->pos(), m_layers[m_currentImage].data()->pixelColor(event->pos()), m_colors[0], 0);
+            update();
+            break;
         }
-        m_lastPoint = event->pos();
-        m_drawing = true;
-        drawLineTo(event->pos());
+        default:
+            break;
+        }
     }
 
     //Middle mouse button
