@@ -1,7 +1,6 @@
 ﻿#include <QLabel>
 
 #include "MainWindow.h"
-#include "ScribbleArea.h"
 #include "Engine.h"
 
 MainWindow::MainWindow(){

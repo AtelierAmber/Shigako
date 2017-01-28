@@ -27,10 +27,10 @@ void Tools::init(){
         std::printf("Setting tool to Fill\n"); 
         m_engineParent->setDrawTool(DrawTool::FILL);
     }, Location(0, 3), "Assets/FillTool.png");
-    m_select = addButton([this](){
+    /*m_select = addButton([this](){
         std::printf("This tool has not been implemented yet\n");
     }, Location(0, 4), "Assets/SelectTool.png");
     m_text = addButton([this](){ 
         std::printf("This tool has not been implemented yetn"); 
-    }, Location(0, 5), "Assets/TextTool.png");    
+    }, Location(0, 5), "Assets/TextTool.png");*/
 }

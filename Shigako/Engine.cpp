@@ -268,6 +268,7 @@ void DrawArea::mousePressEvent(QMouseEvent *event){
             break;
         case DrawTool::FILL:
         {
+            m_modified = true;
             m_lastPoint = event->pos();
             recursiveFill(event->pos(), m_layers[m_currentImage].data()->pixelColor(event->pos()), m_colors[0], 0);
             update();

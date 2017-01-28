@@ -92,15 +92,6 @@
     <ClCompile Include="Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ScribbleArea.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ScribbleArea.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="ScribbleArea.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EngineLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -134,9 +125,6 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="Engine.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ScribbleArea.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="EngineLayout.h">
